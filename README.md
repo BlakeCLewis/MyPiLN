@@ -1,4 +1,11 @@
-# CLON of pvarney/PiLN
+# CLONE of pvarney/PiLN
+branch blake_1 is my working branch
+converting to sqlite
+
+
+
+
+
 Web-based Raspberry Pi Kiln Control Application
 
 This is my first foray into Python, Git, RPi, etc - Please be kind ;-)
