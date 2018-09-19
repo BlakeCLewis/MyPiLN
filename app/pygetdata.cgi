@@ -3,14 +3,11 @@
 import sys
 import re
 import datetime
-import pymysql
+import sqlite3
 import json
 import time
  
-DBSvr = "localhost"
-DBName = "PiLN"
-DBID = "piln"
-DBPwd = "p!lnp@ss"
+DBName = 'PiLN.sqlite3'
  
 # Get json data from standard in
 jsonin = ""
@@ -29,7 +26,7 @@ else:
  
   query = json.loads(jsonin)
  
-  conn = pymysql.connect(host=DBSvr, port=3306, user=DBID, passwd=DBPwd, db=DBName)
+  conn = sqlite3.connect(DBName)
   cur = conn.cursor()
 
   cur.execute(query['select'])
@@ -38,7 +35,6 @@ else:
   retdata = '\n{"cols":' + json.dumps(query['columns']) + ',"rows":['
 
   for row in cur:
-
     retdata += '{"c":['
 
     colindx = 0

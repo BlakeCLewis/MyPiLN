@@ -6,7 +6,7 @@ import time
 import math
 import logging as L
 import sys
-import MySQLdb
+import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_MAX31855.MAX31855 as MAX31855
 import RPi.GPIO as GPIO
@@ -39,10 +39,7 @@ lcd.create_char(2, [0b00000,
 time.sleep(1)
 
 # Set up MySQL Connection
-SQLHost = '127.0.0.1'
-SQLUser = 'piln'
-SQLPass = 'p!lnp@ss'
-SQLDB   = 'PiLN'
+SQLDB   = 'PiLN.sqlite3'
 AppDir  = '/home/PiLN'
 
 #Status File
@@ -337,7 +334,7 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       #print 'Trgt ' + str(int(TargetTmp)) + ',Tm ' + str(RemainTime)
 
       L.debug("Writing stats to Firing DB table...")
-      SQL = "INSERT INTO Firing (run_id, segment, datetime, set_temp, temp, int_temp, pid_output) VALUES ( '%d', '%d', '%s', '%.2f', '%.2f', '%.2f', '%.2f' )" % ( RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
+      SQL = "INSERT INTO firing (run_id, segment, datetime, set_temp, temp, int_temp, pid_output) VALUES ( '%d', '%d', '%s', '%.2f', '%.2f', '%.2f', '%.2f' )" % ( RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
       try:
         SQLCur.execute(SQL)
         SQLConn.commit()
@@ -347,7 +344,7 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
 
       # Check if profile is still in running state
-      RowsCnt = SQLCur.execute("select * from Profiles where state='Running' and run_id=%d" % RunID)
+      RowsCnt = SQLCur.execute("SELECT * FROM profiles WHERE state='Running' AND run_id=%d" % RunID)
 
       if RowsCnt == 0:
         L.warn("Profile no longer in running state - exiting firing")
@@ -419,7 +416,7 @@ while 1:
   # Check for 'Running' firing profile
   SQLConn = MySQLdb.connect(SQLHost, SQLUser, SQLPass, SQLDB);
   SQLCur  = SQLConn.cursor()
-  RowsCnt = SQLCur.execute("select * from Profiles where state='Running'")
+  RowsCnt = SQLCur.execute("SELECT * FROM profiles WHERE state='Running'")
 
   if RowsCnt > 0:
     Data = SQLCur.fetchone()
@@ -431,7 +428,7 @@ while 1:
 
     StTime=time.strftime('%Y-%m-%d %H:%M:%S')
     L.debug("Update profile %d start time to %s" % ( RunID, StTime ) )
-    SQL = "UPDATE Profiles SET start_time='%s' where run_id=%d" % ( StTime, RunID )
+    SQL = "UPDATE profiles SET start_time='%s' WHERE run_id=%d" % ( StTime, RunID )
     try:
       SQLCur.execute(SQL)
       SQLConn.commit()
@@ -441,7 +438,7 @@ while 1:
 
     # Get segments
     L.info("Get segments for run ID %d" % RunID)
-    SQL="select * from Segments where run_id=%d" % RunID
+    SQL="SELECT * FROM segments WHERE run_id=%d" % RunID
     SQLCur.execute(SQL)
     ProfSegs = SQLCur.fetchall()
 
@@ -464,7 +461,7 @@ while 1:
 
         StTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
-        SQL = "UPDATE Segments SET start_time='%s' where run_id=%d and segment=%d" % ( StTime, RunID, Seg )
+        SQL = "UPDATE segments SET start_time='%s' WHERE run_id=%d AND segment=%d" % ( StTime, RunID, Seg )
         try:
           SQLCur.execute(SQL)
           SQLConn.commit()
@@ -478,7 +475,7 @@ while 1:
   
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
-        SQL = "UPDATE Segments SET end_time='%s' where run_id=%d and segment=%d" % ( EndTime, RunID, Seg )
+        SQL = "UPDATE segments SET end_time='%s' WHERE run_id=%d AND segment=%d" % ( EndTime, RunID, Seg )
         try:
           SQLCur.execute(SQL)
           SQLConn.commit()
@@ -492,7 +489,7 @@ while 1:
     else:
       EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
       L.debug("Update profile end time to %s and state to 'Completed' for run id %d" % ( EndTime, RunID ) )
-      SQL = "UPDATE Profiles SET end_time='%s', state='Completed' where run_id=%d" % ( EndTime, RunID )
+      SQL = "UPDATE profiles SET end_time='%s', state='Completed' WHERE run_id=%d" % ( EndTime, RunID )
       try:
         SQLCur.execute(SQL)
         SQLConn.commit()
