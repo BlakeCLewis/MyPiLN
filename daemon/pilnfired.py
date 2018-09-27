@@ -334,7 +334,7 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       #print 'Trgt ' + str(int(TargetTmp)) + ',Tm ' + str(RemainTime)
 
       L.debug("Writing stats to Firing DB table...")
-      sql = "INSERT INTO firing (run_id, segment, datetime, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? )"
+      sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? )"
       try:
         SQLCur.execute(sql, RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
         SQLConn.commit()
