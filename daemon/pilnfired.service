@@ -1,6 +1,5 @@
 [Unit]
 Description=PiLN Kiln Controller firing daemon
-Wants=mysqld.service
 
 [Service]
 Type=simple

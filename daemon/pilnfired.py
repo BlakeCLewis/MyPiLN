@@ -334,9 +334,9 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       #print 'Trgt ' + str(int(TargetTmp)) + ',Tm ' + str(RemainTime)
 
       L.debug("Writing stats to Firing DB table...")
-      SQL = "INSERT INTO firing (run_id, segment, datetime, set_temp, temp, int_temp, pid_output) VALUES ( '%d', '%d', '%s', '%.2f', '%.2f', '%.2f', '%.2f' )" % ( RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
+      sql = "INSERT INTO firing (run_id, segment, datetime, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? )"
       try:
-        SQLCur.execute(SQL)
+        SQLCur.execute(sql, RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
         SQLConn.commit()
       except:
         SQLConn.rollback()
@@ -344,7 +344,8 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
 
       # Check if profile is still in running state
-      RowsCnt = SQLCur.execute("SELECT * FROM profiles WHERE state='Running' AND run_id=%d" % RunID)
+      sql = 'SELECT * FROM profiles WHERE state=? AND run_id=?'
+      RowsCnt = SQLCur.execute(sql, 'Running', RunID)
 
       if RowsCnt == 0:
         L.warn("Profile no longer in running state - exiting firing")
@@ -416,7 +417,8 @@ while 1:
   # Check for 'Running' firing profile
   SQLConn = MySQLdb.connect(SQLHost, SQLUser, SQLPass, SQLDB);
   SQLCur  = SQLConn.cursor()
-  RowsCnt = SQLCur.execute("SELECT * FROM profiles WHERE state='Running'")
+  sql = 'SELECT * FROM profiles WHERE state=?')
+  RowsCnt = SQLCur.execute( sql, 'Running' )
 
   if RowsCnt > 0:
     Data = SQLCur.fetchone()
@@ -427,10 +429,10 @@ while 1:
     L.info("Run ID %d is active - starting firing profile" % RunID)
 
     StTime=time.strftime('%Y-%m-%d %H:%M:%S')
-    L.debug("Update profile %d start time to %s" % ( RunID, StTime ) )
-    SQL = "UPDATE profiles SET start_time='%s' WHERE run_id=%d" % ( StTime, RunID )
+    L.debug('Update profile %d start time to %s' % ( RunID, StTime ) )
+    sql = 'UPDATE profiles SET start_time=? WHERE run_id=?'
     try:
-      SQLCur.execute(SQL)
+      SQLCur.execute( sql, StTime, RunID )
       SQLConn.commit()
     except:
       SQLConn.rollback()
@@ -438,8 +440,8 @@ while 1:
 
     # Get segments
     L.info("Get segments for run ID %d" % RunID)
-    SQL="SELECT * FROM segments WHERE run_id=%d" % RunID
-    SQLCur.execute(SQL)
+    sql = 'SELECT * FROM segments WHERE run_id=?'
+    SQLCur.execute( sql, RunID )
     ProfSegs = SQLCur.fetchall()
 
     for Row in ProfSegs:
@@ -461,9 +463,9 @@ while 1:
 
         StTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
-        SQL = "UPDATE segments SET start_time='%s' WHERE run_id=%d AND segment=%d" % ( StTime, RunID, Seg )
+        sql = "UPDATE segments SET start_time=? WHERE run_id=? AND segment=?"
         try:
-          SQLCur.execute(SQL)
+          SQLCur.execute( sql, StTime, RunID, Seg )
           SQLConn.commit()
         except:
           SQLConn.rollback()
@@ -475,9 +477,9 @@ while 1:
   
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
-        SQL = "UPDATE segments SET end_time='%s' WHERE run_id=%d AND segment=%d" % ( EndTime, RunID, Seg )
+        sql = 'UPDATE segments SET end_time=? WHERE run_id=? AND segment=?'
         try:
-          SQLCur.execute(SQL)
+          SQLCur.execute( sql, EndTime, RunID, Seg )
           SQLConn.commit()
         except:
           SQLConn.rollback()
@@ -488,10 +490,10 @@ while 1:
 
     else:
       EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
-      L.debug("Update profile end time to %s and state to 'Completed' for run id %d" % ( EndTime, RunID ) )
-      SQL = "UPDATE profiles SET end_time='%s', state='Completed' WHERE run_id=%d" % ( EndTime, RunID )
+      L.debug("Update profile end time to %s and state to %s for run id %d" % ( EndTime, 'Completed', RunID ) )
+      sql = 'UPDATE profiles SET end_time=?, state=? WHERE run_id=?'
       try:
-        SQLCur.execute(SQL)
+        SQLCur.execute(sql, EndTime,'Completed', RunID )
         SQLConn.commit()
       except:
         SQLConn.rollback()
