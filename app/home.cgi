@@ -5,9 +5,9 @@ import sqlite3
 #from MySQLdb.cursors import DictCursor
 import jinja2
 
-db = sqlite3.connect( 'PiLN.sqlite3' ) 
+db = sqlite3.connect('PiLN.sqlite3') 
 cursor = db.cursor()
-env = jinja2.Environment(loader=jinja2.FileSystemLoader(["/home/PiLN/template"])) 
+env = jinja2.Environment(loader=jinja2.FileSystemLoader(['/home/PiLN/template'])) 
 
 maxsegs = 20
 def_rate = 9999
@@ -23,11 +23,11 @@ state = form.getfirst( "state", "" )
 
 
 if page == "view":
-
-  cursor.execute( "SELECT * FROM profiles WHERE run_id=%d;" % int(run_id) )
+  sql = 'SELECT * FROM profiles WHERE run_id=?'
+  cursor.execute( sql, int(run_id) )
   profile = cursor.fetchone()
-  
-  cursor.execute( "SELECT segment, set_temp, rate, hold_min, int_sec, date_format(start_time, '%%m/%%d/%%Y %%H:%%i') AS start_time, date_format(end_time, '%%m/%%d/%%Y %%H:%%i') AS end_time FROM segments WHERE run_id=%d ORDER BY segment;" % int(run_id) )
+  sql = 'SELECT segment, set_temp, rate, hold_min, int_sec, start_time, end_time FROM segments WHERE run_id=? ORDER BY segment'
+  cursor.execute( sql, int(run_id) )
   segments = cursor.fetchall()
   
   template = env.get_template( "header.html" ) 
@@ -87,15 +87,15 @@ elif page == "new":
 
 
 elif page == "editcopy":
-
-  cursor.execute( "SELECT segment, set_temp, rate, hold_min, int_sec FROM segments WHERE run_id=%d ORDER BY segment;" % int(run_id) )
+  sql = 'SELECT segment, set_temp, rate, hold_min, int_sec FROM segments WHERE run_id=? ORDER BY segment'
+  cursor.execute( sql, int(run_id) )
   segments = cursor.fetchall()
   curcount = cursor.rowcount
   addsegs = range(curcount + 1, maxsegs + 1)
   lastseg = curcount + 1
 
-  sql = "SELECT notes, p_param, i_param, d_param FROM profiles WHERE run_id=%d;" % int(run_id)
-  cursor.execute( sql )
+  sql = 'SELECT notes, p_param, i_param, d_param FROM profiles WHERE run_id=?'
+  cursor.execute(sql,int(run_id))
   profile = cursor.fetchone()
 
   #if profile is not None:
@@ -133,8 +133,8 @@ elif page == "run":
     title="Run Profile"
   )
 
-  sql = "SELECT run_id FROM profiles WHERE state='Running'"
-  cursor.execute( sql )
+  sql = 'SELECT run_id FROM profiles WHERE state=?'
+  cursor.execute( sql, 'Running' )
   runningid = cursor.fetchone()
 
   if runningid:
@@ -150,8 +150,8 @@ elif page == "run":
 
   else:
 
-    sql = "UPDATE profiles SET state='Running' WHERE run_id=%d" % int(run_id)
-    cursor.execute( sql )
+    sql = 'UPDATE profiles SET state=? WHERE run_id=?'
+    cursor.execute( sql, 'Running', int(run_id) )
     db.commit()
  
     template = env.get_template( "reload.html" ) 
@@ -180,10 +180,9 @@ elif page == "savenew":
   i_param = form.getfirst( "Ki", 0.000 )
   d_param = form.getfirst( "Kd", 0.000 )
 
-  sql = "INSERT INTO profiles (state, notes, p_param, i_param, d_param) VALUES ('%s', '%s', %0.3f, %0.3f, %0.3f)" % \
-    ( "Staged", notes, float(p_param), float(i_param), float(d_param) )
+  sql = 'INSERT INTO profiles(state, notes, p_param, i_param, d_param) VALUES(?,?,?,?,?)'
 
-  cursor.execute( sql )
+  cursor.execute( sql, 'Staged', notes, float(p_param), float(i_param), float(d_param) )
   newrunid = cursor.lastrowid
   db.commit()
  
@@ -215,9 +214,8 @@ elif page == "savenew":
       if int_sec == "":
         int_sec = def_intsec
 
-      sql = "INSERT INTO segments (run_id, segment, set_temp, rate, hold_min, int_sec) VALUES ('%d', '%d', '%d', '%d', '%d', '%d')" % \
-        ( int(newrunid), num, int(set_temp), int(rate), int(hold_min), int(int_sec) )
-      cursor.execute( sql )
+      sql = 'INSERT INTO segments (run_id, segment, set_temp, rate, hold_min, int_sec) VALUES(?,?,?,?,?,?)'
+      cursor.execute( sql, int(newrunid), num, int(set_temp), int(rate), int(hold_min), int(int_sec) )
       db.commit()
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
@@ -250,9 +248,8 @@ elif page == "saveupd":
 
   lastseg = form.getfirst( "lastseg", 0 )
 
-  sql = "UPDATE profiles SET notes='%s', p_param=%0.3f, i_param=%0.3f, d_param=%0.3f WHERE run_id=%d" % \
-    ( notes, float(p_param), float(i_param), float(d_param), int(run_id) )
-  cursor.execute( sql )
+  sql = 'UPDATE profiles SET notes=?, p_param=?, i_param=?, d_param=? WHERE run_id=?'
+  cursor.execute( sql, notes, float(p_param), float(i_param), float(d_param), int(run_id) )
  
   for num in range(1,maxsegs + 1):
     seg = str(num)
@@ -270,19 +267,16 @@ elif page == "saveupd":
         int_sec = def_intsec
 
       if num >= int(lastseg):
-        sql = "INSERT INTO segments (run_id, segment, set_temp, rate, hold_min, int_sec) VALUES ('%d', '%d', '%d', '%d', '%d', '%d')" % \
-          ( int(run_id), num, int(set_temp), int(rate), int(hold_min), int(int_sec) )
-        cursor.execute( sql )
+        sql = 'INSERT INTO segments (run_id, segment, set_temp, rate, hold_min, int_sec) VALUES (?,?,?,?,?,?)'
+        cursor.execute( sql, int(run_id), num, int(set_temp), int(rate), int(hold_min), int(int_sec) )
 
       else:
-        sql = "UPDATE segments SET set_temp=%d, rate=%d, hold_min=%d, int_sec=%d WHERE run_id=%d AND segment=%d" % \
-          ( int(set_temp), int(rate), int(hold_min), int(int_sec), int(run_id), num )
-        cursor.execute( sql )
+        sql = 'UPDATE segments SET set_temp=?, rate=?, hold_min=?, int_sec=? WHERE run_id=? AND segment=?'
+        cursor.execute( sql, int(set_temp), int(rate), int(hold_min), int(int_sec), int(run_id), num )
 
     else:
-      sql = "DELETE FROM segments WHERE run_id=%d AND segment=%d" % \
-        ( int(run_id), num )
-      cursor.execute( sql )
+      sql = 'DELETE FROM segments WHERE run_id=? AND segment=?'
+      cursor.execute( sql, int(run_id), num )
 
   db.commit()
 
@@ -290,7 +284,8 @@ elif page == "saveupd":
 
 elif page == "del_conf":
 
-  cursor.execute( "SELECT segment, set_temp, rate, hold_min, int_sec, date_format(start_time, '%%m/%%d/%%Y %%H:%%i') AS start_time, date_format(end_time, '%%m/%%d/%%Y %%H:%%i') AS end_time FROM segments WHERE run_id='%s' ORDER BY segment;" % run_id )
+  sql = 'SELECT segment, set_temp, rate, hold_min, int_sec, start_time, end_time FROM segments WHERE run_id=? ORDER BY segment'
+  cursor.execute( sql, int(run_id) )
   segments = cursor.fetchall()
   
   template = env.get_template( "header.html" ) 
@@ -329,12 +324,12 @@ elif page == "delete":
   template = env.get_template( "footer.html" ) 
   ftr = template.render()
 
-  sql1 = "DELETE FROM firing   WHERE run_id=%d" % int(run_id)
-  sql2 = "DELETE FROM segments WHERE run_id=%d" % int(run_id)
-  sql3 = "DELETE FROM profiles WHERE run_id=%d" % int(run_id)
-  cursor.execute( sql1 )
-  cursor.execute( sql2 )
-  cursor.execute( sql3 )
+  sql1 = 'DELETE FROM firing   WHERE run_id=?'
+  sql2 = 'DELETE FROM segments WHERE run_id=?'
+  sql3 = 'DELETE FROM profiles WHERE run_id=?'
+  cursor.execute( sql1, int(run_id) )
+  cursor.execute( sql2, int(run_id) )
+  cursor.execute( sql3, int(run_id) )
   db.commit()
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
@@ -359,7 +354,8 @@ elif page == "stop":
   template = env.get_template( "footer.html" ) 
   ftr = template.render()
 
-  cursor.execute( "UPDATE profiles SET state='Stopped' WHERE run_id=%d" % int(run_id) )
+  sql = 'UPDATE profiles SET state=? WHERE run_id=?'
+  cursor.execute( sql, 'Stopped' int(run_id) )
   db.commit()
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
@@ -373,8 +369,8 @@ elif page == "notes_save":
     title="Save Notes"
   )
 
-  sql = "UPDATE profiles SET notes='%s' WHERE run_id=%d" % ( notes, int(run_id))
-  cursor.execute( sql )
+  sql = 'UPDATE profiles SET notes=? WHERE run_id=?'
+  cursor.execute( sql, notes, int(run_id) )
   db.commit()
  
   template = env.get_template( "reload.html" ) 
@@ -394,7 +390,8 @@ elif page == "notes_save":
 
 else:
 
-  cursor.execute( "SELECT state, run_id, notes, date_format(start_time, '%m/%d/%Y') AS lastdate FROM profiles ORDER BY FIELD(state,'Running','Staged','Stopped','Completed'), run_id DESC;")
+  sql = "SELECT state, run_id, notes, start_time AS lastdate FROM profiles ORDER BY FIELD(state,'Running','Staged','Stopped','Completed'), run_id DESC;")
+  cursor.execute( sql )
   profiles = cursor.fetchall()
   
   template = env.get_template( "header.html" ) 
