@@ -86,7 +86,7 @@
  
         function updateChart() {
           var query = {
-            select: "select dt, segment, set_temp, temp, pid_output from Firing where run_id={{ run_id }} order by dt asc",
+            select: "SELECT dt, segment, set_temp, temp, pid_output FROM firing WHERE run_id={{ run_id }} ORDER BY dt ASC",
             columns: [
               {id:'dt', label:'Time', type:'datetime'},
               {id:'segment', label:'Firing Segment', type:'number'},
