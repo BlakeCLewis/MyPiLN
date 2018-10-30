@@ -417,7 +417,7 @@ while 1:
   # Check for 'Running' firing profile
   SQLConn = MySQLdb.connect(SQLHost, SQLUser, SQLPass, SQLDB);
   SQLCur  = SQLConn.cursor()
-  sql = 'SELECT * FROM profiles WHERE state=?')
+  sql = 'SELECT * FROM profiles WHERE state=?'
   RowsCnt = SQLCur.execute( sql, 'Running' )
 
   if RowsCnt > 0:
