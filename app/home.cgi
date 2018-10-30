@@ -7,7 +7,7 @@ import jinja2
 
 db = sqlite3.connect('PiLN.sqlite3') 
 cursor = db.cursor()
-env = jinja2.Environment(loader=jinja2.FileSystemLoader(['/home/PiLN/template'])) 
+env = jinja2.Environment(loader=jinja2.FileSystemLoader(['/home/bclzz4/git/MyPiLN/template'])) 
 
 maxsegs = 20
 def_rate = 9999

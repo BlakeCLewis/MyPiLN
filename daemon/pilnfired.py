@@ -40,7 +40,7 @@ time.sleep(1)
 
 # Set up MySQL Connection
 SQLDB   = 'PiLN.sqlite3'
-AppDir  = '/home/PiLN'
+AppDir  = '/home/bclzz4/git/MyPiLN'
 
 #Status File
 StatFile = '/var/www/html/pilnstat.json'
