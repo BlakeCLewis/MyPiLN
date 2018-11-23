@@ -9,38 +9,44 @@ import sys
 import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_MAX31855.MAX31855 as MAX31855
-import RPi.GPIO as GPIO
-from RPLCD import CharLCD
 
-#Set up LCD
-lcd = CharLCD(pin_rs=17, pin_rw=None, pin_e=27, pins_data=[12, 16, 20, 21],
-              numbering_mode=GPIO.BCM,
-              cols=20, rows=4, dotsize=8,
-              auto_linebreaks=True)
-
-lcd.create_char(1, [0b01100,
-                    0b10010,
-                    0b10010,
-                    0b01100,
-                    0b00000,
-                    0b00000,
-                    0b00000,
-                    0b00000])
-lcd.create_char(2, [0b00000,
-                    0b10000,
-                    0b01000,
-                    0b00100,
-                    0b00010,
-                    0b00001,
-                    0b00000,
-                    0b00000])
-
-#Wait for LCD to start up - otherwise you get garbage
+# oled setup
+import Adafruit_GPIO.SPI as SPI
+import Adafruit_SSD1306
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import subprocess
+RST = None # on the PiOLED this pin isnt used
+DC = 23
+SPI_PORT = 0
+SPI_DEVICE = 0
+disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
+disp.begin()
+disp.clear()
+disp.display()
+# Create blank image for drawing.
+width = disp.width
+height = disp.height
+# Make sure to create image with mode '1' for 1-bit color.
+image = Image.new('1', (width, height))
+# Get drawing object to draw on image.
+draw = ImageDraw.Draw(image)
+# Draw a black filled box to clear the image.
+draw.rectangle((0,0,width,height), outline=0, fill=0)
+# Define some constants to allow easy resizing of shapes.
+padding = -2
+top = padding
+bottom = height-padding
+# Move left to right keeping track of the current x position for drawing shapes.
+x = 0
+font = ImageFont.load_default()
 time.sleep(1)
+# end oled setup
 
 # Set up MySQL Connection
 SQLDB   = 'PiLN.sqlite3'
-AppDir  = '/home/bclzz4/git/MyPiLN'
+AppDir  = '/home/pi/git/MyPiLN'
 
 #Status File
 StatFile = '/var/www/html/pilnstat.json'
@@ -73,12 +79,10 @@ GPIO.setup(4, GPIO.OUT) ## Setup GPIO Pin 7 to OUT
 GPIO.output(4,False) ## Turn off GPIO pin 7
 
 def clean(*args):
-  print "\nProgram ending! Cleaning up...\n"  
+  print ("\nProgram ending! Cleaning up...\n")
   GPIO.output(4,False) ## Turn off GPIO pin 4
-  lcd.close(clear=True)
-  time.sleep(0.5)
-  GPIO.cleanup() # this ensures a clean exit  
-  print "All clean - Stopping.\n"
+  GPIO.cleanup() # this ensures a clean exit
+  print ("All clean - Stopping.\n")
   os._exit(0)
 
 for sig in (SIGABRT, SIGINT, SIGTERM):
@@ -320,18 +324,11 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
         wheel = '/'
       else:
         wheel = '-'
-    
-      lcd.clear()
-      lcd.cursor_pos = (0, 0)
-      lcd.write_string(u'Profile' + str(RunID) + ' Seg' + str(Seg) + ' ' + wheel )
-      lcd.cursor_pos = (1, 0)
-      lcd.write_string(u'Stat:' + str(RunState)[0:14] )
-      lcd.cursor_pos = (2, 0)
-      lcd.write_string(u'Tmp' +  str(int(ReadTmp)) + '\x01 Ramp' + str(int(RampTmp)) + '\x01' )
-      lcd.cursor_pos = (3, 0)
-      lcd.write_string(u'Trgt' + str(int(TargetTmp)) + '\x01 Tm' + str(RemainTime) )
-      #lcd.write_string(u'Trgt ' + str(int(TargetTmp)) + '\x01,Tm ' )
-      #print 'Trgt ' + str(int(TargetTmp)) + ',Tm ' + str(RemainTime)
+
+      draw.text((x,top),   'Profile: '+str(RunID)+'Seg: '+str(Seg)+' '+wheel                 ,font=font,fill=255)
+      draw.text((x,top+8), 'Stat :'   +str(RunState)[0:14]                                   ,font=font,fill=255)
+      draw.text((x,top+16),'Tmp: '    +str(int(ReadTmp))+'\x01 Ramp'+str(int(RampTmp))+'\x01',font=font,fill=255)
+      draw.text((x,top+25),'Trgt: '   +str(int(TargetTmp))+'\x01 Tm'+str(RemainTime)         ,font=font,fill=255)
 
       L.debug("Writing stats to Firing DB table...")
       sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? )"
@@ -399,20 +396,10 @@ while 1:
   else:
     wheel = '-'
   
-  lcd.clear()
-  lcd.cursor_pos = (0, 0)
-  lcd.write_string(u'IDLE ' + wheel )
-  lcd.cursor_pos = (2, 0)
-  lcd.write_string(u'Temp ' +  str(int(ReadTmp)) + '\x01')
-
-#{
-#  "proc_update_utime": "1506396470",
-#  "readtemp": "145",
-#  "run_profile": "none",
-#  "run_segment": "n/a",
-#  "targettemp": "n/a"
-#}
-
+  draw.text((x, top),  'IDLE '+wheel,                   font=font,fill=255)
+  draw.text((x, top+8),'Temp '+str(int(ReadTmp))+'\x01',font=font,fill=255)
+  draw.text((x, top+16),'',font=font, fill=255)
+  draw.text((x, top+25),'',font=font, fill=255)
 
   # Check for 'Running' firing profile
   SQLConn = MySQLdb.connect(SQLHost, SQLUser, SQLPass, SQLDB);
@@ -505,11 +492,3 @@ while 1:
 
   SQLConn.close()
   time.sleep(2)
-
-#except KeyboardInterrupt:  
-#  print "\nKeyboard interrupt caught. Cleaning up...\n"
-
-#except:  
-#  print "\nOther error or exception occurred! Cleaning up...\n"  
-  
-#finally:  
