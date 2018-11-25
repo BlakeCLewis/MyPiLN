@@ -4,86 +4,75 @@ converting to sqlite
 
 
 
-
-
 Web-based Raspberry Pi Kiln Control Application
-
-This is my first foray into Python, Git, RPi, etc - Please be kind ;-)
-
-I have a good size 220v 45amp electric kiln that has the old "kiln-sitter" style temperature control with bi-metal on/off cycle adjustment knobs. I wanted something with much more precise temperature control for more consistent results and in order to do more work with glass. I started this project with an Arduino board but found the wifi connectivity and coding much too complicated. Being rather proficient in Perl, it seemed the RPi was a better solution. I wrote the original PID control in Perl, but then ported to Python since there seemed to be much more support for it on the RPi and since it was something I wanted to learn anyway.
 
 WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
 
-This is what I hoped to accomplish:
-
-- Create a PID controller in Python to control an electric kiln. The program takes target temperature, rate, hold time and interval seconds as inputs.
-- Daemonize it
-- Use MySQL to track temperature change, firing profiles, etc
-- Chart the results of firing in real time with google charts
-- Wrap in all in a web front end
-
-Many many many thanks to all those who post helpful tidbits out on the web - those on stackoverflow.com in particular. Way to many bits and pieces to give any particular credit. However, I did pull PID calculation code from the following to replace my own code that was iffy (what's math?). It was in C, but was an easy port to Python:
-
-http://brettbeauregard.com/blog/2011/04/improving-the-beginner%E2%80%99s-pid-reset-windup/
-
-All comments, questions, contributions and suggestions welcome!
-
 Future improvements:
-- Better calculation of remaining segment time. Currently, remaining time is reset to hold time once temperature is reached.
 - Crash/loss of power recovery
-- Overheat shutdown
+- Overheat shutdown (use kiln sitter as sensor, use a cone 6 bar in KS and wire KS to GPIO)
+- performance watchdog, shutdown when a minimum rate can not be maintained
+- abstract display and thermocouple code to enable changing hardware (MAX31856 has 50/60hz filter and a correction table)
+- zone control (thermocouple per ring)
+- inductive current sensors: to monitor electric usage per section; total to calculate cost of firing; element fault indicator
+- record ambient temp
+- 
+
+- Hardware:
+
+		Raspberry Pi 3
+		MAX31855 thermocouple module from Adafruit (https://www.adafruit.com/product/269)
+		High temperature (2372 F) type K thermocouple ($7) (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud)
+                I bought this 6 pack for the thermocouple wire - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1) 
+		3 LEDs for 'relay on' indicator and resistors for LEDs
+		1 - unl2003a darlington transitor array to switch 12V coil relays
+		3 - Deltrol  20852-81 relays $17.50 each and about that much shipping(https://www.galco.com/buy/Deltrol-Controls/20852-81) (This is equivelent to what Skutt uses)
+		12V power supply (converts 120vac to 12vdc)
+                5V buck converter to power PI (reduces 12v to 5v)
+                LCD screen and driver board (most any hdmi monitor will work)
+		Terminal blocks to distribute L1, L2, N and GND
+			GRN: 1 - (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
+			L1,L2,N: 3 - (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
+		Wired 2 #10 awg to each section, all wires on the Kiln are Hi Temp Appliance wire
+		Crimp terminals are Hi Temp Appliance, uses the same crimper used on the elements (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1) The crimpers take muscle.
+		
 
 Install:
-- Hardware: Raspberry Pi 3, MAX31855 thermocouple interface from Adafruit (https://www.adafruit.com/product/269), High temperature (2372 F) type K thermocouple (http://r.ebay.com/a4cHY1 - search for "kiln thermocouple"), 6 x 40amp Solid State Relays - 2 for each heating element (http://a.co/8PtFgIr), 4 x 20 LCD Display (https://www.adafruit.com/product/198), 5v reed or solid state relay (low voltage load) used to switch 5v supply to high load SSRs (note that the 5v reed relay I used is switched successfully using the 3.3v supply of the GPIO pins), LED for relay on indicator, resistor for LED, variable resistor for LCD contrast adjustment.
 
 - Pin-Out:
 
-		MAX31855+:		3.3v, Pin 1
-		MAX31855-:		GROUND, Pin 20
+		MAX31855+:		3.3v,    Pin 17
+		MAX31855-:		GROUND,  Pin 20
 		MAX31855 CLK:		GPIO 25, Pin 22
 		MAX31855 CS:		GPIO 24, Pin 18
 		MAX31855 DO:		GPIO 18, Pin 12
-		REED RELAY+: 		GPIO 4, Pin 7
-		REED RELAY-:		GROUND, Pin 20
-		REED RELAY INPUT: 	5v, Pin 2
-		REED RELAY OUTPUT:	To LED, and high power SSRs (see Fritzing diagram)
-		LCD Vss: 		GROUND, Pin 20
-		LCD Vcc: 		5v, Pin 2
-		LCD Vo: 		Variable Resistor
-		LCD RS: 		GPIO 17, Pin 11
-		LCD R/W: 		GROUND, Pin 20
-		LCD E:			GPIO 27, Pin 13
-		LCD DB4:		GPIO 12, Pin 32
-		LCD DB5:		GPIO 16, Pin 36
-		LCD DB6:		GPIO 20, Pin 38
-		LCD DB7:		GPIO 21, Pin 40
-		LCD LED+:		5v, Pin 2
-		LCD LED-:		GROUND, Pin 20
-		
+		unl2003a 1: 		GPIO 23, Pin 16
+		unl2003a 8:		GROUND,  Pin 25
+		PiOLED: 		3.3v,    Pin 1
+		PiOLED: 		5v,      Pin 2
+		PiOLED: 		GPIO 2,  Pin 3
+		PiOLED: 		5v,      Pin 4
+		PiOLED: 		GPIO 3,  Pin 5
+		PiOLED: 		GND,     Pin 6
 
 - Install PiLN files in /home and create log directory:
 
-		cd /home
-		sudo git clone https://github.com/pvarney/PiLN
-		sudo mkdir /home/PiLN/log
+                sudo adduser PiLN
+                su - PiLN
+		git clone https://github.com/pvarney/PiLN .
+		mkdir ./log
 		
-- Install MySQL/PHPMyAdmin (PHPMyAdmin not required):
+- Install sqlite3:
 
-		sudo apt-get install mysql-server
-		sudo apt-get install mysql-client php5-mysql
-		sudo apt-get install phpmyadmin
-		
-- Set up Apache for PHPMyAdmin if required. Edit /etc/apache2/apache2.conf and add the follow at the bottom of the file:
-	
-		Include /etc/phpmyadmin/apache.conf
+		sudo apt-get install sqlite3
 		
 - Set up directories/link for web page:
 
-		sudo mkdir /var/www/html/images	
-		sudo mkdir /var/www/html/style	
-		sudo ln -s /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png	
-		sudo ln -s /home/PiLN/images/piln.png /var/www/html/images/piln.png	
-		sudo ln -s /home/PiLN/style/style.css /var/www/html/style/style.css
+		sudo mkdir /var/www/html/images
+		sudo mkdir /var/www/html/style
+		sudo ln -s /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png
+		sudo ln -s /home/PiLN/images/piln.png    /var/www/html/images/piln.png
+		sudo ln -s /home/PiLN/style/style.css    /var/www/html/style/style.css
 	
 - Add the following ScriptAlias and Directory parameters under "IfDefine ENABLE_USR_LIB_CGI_BIN" in /etc/apache2/conf-available/serve-cgi-bin.conf:
 	
@@ -107,10 +96,24 @@ Install:
 		sudo systemctl restart apache2
 		
 - Install required Python packages:
-		
-		sudo apt-get install python-mysqldb
-		sudo apt-get install python-dev
-		sudo pip install PyMySQL
+
+		sudo apt-get update
+		sudo apt-get install build-essential python-dev python-smbus
+
+- Install pioled requirements:
+
+		These git clones can be done by a user other than PiLN
+
+		git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+		cd ./Adafruit_Python_GPIO/
+		sudo python3 setup.py install
+
+		git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
+		cd ./Adafruit_Python_SSD1306/
+		sudo python3 setup.py install
+
+		sudo raspi-config #enable interfaces ic2 & spi
+		lsmod | grep spi
 		
 - Install Adafruit MAX31855 Module:
 
@@ -119,16 +122,14 @@ Install:
 		cd Adafruit_Python_MAX31855
 		sudo python setup.py install		
 		
-- Required Python modules (separate installs were not required for these using the latest Raspian build as of July 2017): cgi, jinja2, sys, re, datetime, pymysql, json, time, logging, RPi.GPIO.
+- Required Python modules (separate installs were not required for these using the latest Raspian build as of July 2017): cgi, jinja2, sys, re, datetime, json, time, logging, RPi.GPIO.
 
-- Log into the MySQL command line, create the database, create the user and give permissions, then load PiLN.sql to build table structures:
+- create the sqlite3 database:
 
-		mysql -uroot -p
-		mysql> create database PiLN;
-		mysql> CREATE USER 'piln'@'localhost' IDENTIFIED BY 'p!lnp@ss';
-		mysql> GRANT ALL PRIVILEGES ON PiLN.* TO 'piln'@'localhost';
-		mysql> use PiLN;
-		mysql> source /home/PiLN/PiLN.sql;
+		sudo mkdir -p /var/www/db/PiLN/
+		sudo chown -R PiLN:PiLN /var/www/db
+		sqlite3 /var/www/db/PiLN/PiLN.sqlite3
+		sqlite> .read /home/PiLN/PiLN.sql;
 
 - To enable automatic startup of the daemon (Had to do the copy/enable/delete/link in order to get systemctl enable to work):
 
@@ -140,22 +141,13 @@ Install:
 		sudo systemctl daemon-reload
 		sudo systemctl start pilnfired
 		sudo systemctl status pilnfired
-	I also had to convert mysqld to start up from systemd so that I could set a "want" for pilnfired (mysqld.service file from https://gist.github.com/thomasfr/e4e4bb64352ee574334a):
-	
-		cp /home/PiLN/daemon/mysqld.service /etc/systemd/system/
-		sudo systemctl daemon-reload
-		sudo systemctl enable mysqld
 		
 - Tuning: I spent a while adjusting the PID parameters to get the best results and am still tuning. Your tuning parameters will depend on your specific application, but I used the following which might be a good starting point:
 
 		Proportional:	6.00
 		Integral:	0.04
 		Derivative:	0.00
-	I also had good results setting the interval seconds to 10
+	I also had good results setting the interval seconds to 10, which is the default.
 
 Using the Web App:
 - On the same network that the RPi is connected to, go to http://<RPi_IPAddress>/pilnapp/home.cgi
-From there, I hope it's all fairly self-explanatory. Feel free to contact me with questions!
-
-UPDATE 4/8/2018:
-I had a problem with one of the heating elements not working and found that the SSRs couldn't hold up to the heat - even with the heat sinks. I have since replaced them with mechanical relays (same type that were in it before I ripped the guts out). I am now using a 4 relay module to switch on/off the 220v coil voltage on the relays. I also put the MAX31855 module in its own metal box to see if it would reduce the amount of temperature fluctuation. 

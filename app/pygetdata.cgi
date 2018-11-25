@@ -7,7 +7,7 @@ import sqlite3
 import json
 import time
  
-DBName = 'PiLN.sqlite3'
+SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
  
 # Get json data from standard in
 jsonin = ""
@@ -26,7 +26,7 @@ else:
  
   query = json.loads(jsonin)
  
-  conn = sqlite3.connect(DBName)
+  conn = sqlite3.connect(SQLDB)
   cur = conn.cursor()
 
   cur.execute(query['select'])
