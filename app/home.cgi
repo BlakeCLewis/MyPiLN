@@ -29,7 +29,6 @@ if page == "view":
   p = (int(run_id),)
   cursor.execute(sql,p)
   segments = cursor.fetchall()
-  print (segments)  
   template = env.get_template( "header.html" ) 
   hdr = template.render( 
     title="Profile Details"
@@ -172,12 +171,10 @@ elif page == "run":
 
 
 elif page == "savenew":
-
   template = env.get_template( "header.html" ) 
   hdr = template.render( 
     title="Save Profile"
   )
-
   p_param = form.getfirst( "Kp", 0.000 )
   i_param = form.getfirst( "Ki", 0.000 )
   d_param = form.getfirst( "Kd", 0.000 )
@@ -198,7 +195,6 @@ elif page == "savenew":
 
   template = env.get_template( "footer.html" ) 
   ftr = template.render()
-
   for num in range(1,maxsegs + 1):
     seg      = str(num)
     set_temp = form.getfirst( "set_temp" + seg, "" )
@@ -207,20 +203,17 @@ elif page == "savenew":
     int_sec  = form.getfirst( "int_sec" + seg, "" )
  
     if set_temp != "":
-
       if rate == "":
         rate = def_rate
       if hold_min == "":
         hold_min = def_holdmin 
       if int_sec == "":
         int_sec = def_intsec
-      if seg == 1: 
-        p = [int(newrunid), num, int(set_temp), int(rate), int(hold_min), int(int_sec)]
-      else:
-        p = p, [int(newrunid), num, int(set_temp), int(rate), int(hold_min), int(int_sec)]
 
-  sql = 'INSERT INTO segments (run_id, segment, set_temp, rate, hold_min, int_sec) VALUES (?,?,?,?,?,?)'
-  cursor.executemany(sql,p)
+      p = int(newrunid), num, int(set_temp), int(rate), int(hold_min), int(int_sec)
+      sql = 'INSERT INTO segments (run_id, segment, set_temp, rate, hold_min, int_sec) VALUES (?,?,?,?,?,?)'
+      cursor.execute(sql,p)
+
   db.commit()
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
@@ -277,7 +270,7 @@ elif page == "saveupd":
 
       else:
         sql = 'UPDATE segments SET set_temp=?, rate=?, hold_min=?, int_sec=? WHERE run_id=? AND segment=?'
-        p=(int(set_temp), int(rate), int(hold_min), int(int_sec), int(run_id), num )
+        p = (int(set_temp), int(rate), int(hold_min), int(int_sec), int(run_id), num)
         cursor.execute(sql,p)
 
     else:
@@ -331,7 +324,7 @@ elif page == "delete":
   sql1 = 'DELETE FROM firing   WHERE run_id=?'
   sql2 = 'DELETE FROM segments WHERE run_id=?'
   sql3 = 'DELETE FROM profiles WHERE run_id=?'
-  p=(notes,int(run_id))
+  p=(int(run_id),)
   cursor.execute(sql1,p)
   cursor.execute(sql2,p)
   cursor.execute(sql3,p)
@@ -393,8 +386,6 @@ elif page == "notes_save":
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-
-
 else:
   sql =  """SELECT t2.state, t2.run_id, t2.notes, t2.lastdate
             FROM (SELECT t1.state, t1.run_id, t1.notes, t1.start_time AS lastdate,
@@ -408,7 +399,7 @@ else:
                  ) AS t2 (state,run_id,notes,lastdate,blah)
             ORDER BY blah, run_id DESC;"""
 
-  sql="SELECT state,run_id,notes,start_time as lastdate FROM profiles order by state, run_id DESC;"
+  sql = "SELECT state,run_id,notes,start_time as lastdate FROM profiles order by state, run_id DESC;"
   cursor.execute( sql )
   profiles = cursor.fetchall()
   
