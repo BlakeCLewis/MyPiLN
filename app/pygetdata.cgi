@@ -27,6 +27,7 @@ else:
   query = json.loads(jsonin)
  
   conn = sqlite3.connect(SQLDB)
+  conn.row_factory = sqlite3.Row
   cur = conn.cursor()
 
   cur.execute(query['select'])

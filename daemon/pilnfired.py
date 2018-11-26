@@ -75,13 +75,13 @@ DO  = 17
 Sensor = MAX31855.MAX31855(CLK, CS, DO)
 
 # Pin setup for relay
-GPIO.setup(23, GPIO.OUT) ## Setup GPIO Pin 16 to OUT
-GPIO.output(23,False) ## Turn off GPIO Pin 16
+GPIO.setup (24, GPIO.OUT) ## Setup GPIO Pin 16 to OUT
+GPIO.output(24, GPIO.LOW) ## Turn off GPIO Pin 16
 
 def clean(*args):
   print ("\nProgram ending! Cleaning up...\n")
-  GPIO.output(4,False) ## Turn off GPIO pin 4
-  GPIO.cleanup() # this ensures a clean exit
+  GPIO.output(24,False) ## Turn off GPIO pin 18
+  GPIO.cleanup()       ## this ensures a clean exit
   print ("All clean - Stopping.\n")
   os._exit(0)
 
@@ -293,12 +293,12 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       if Output > 0:
         L.debug("==>Relay On")
-        GPIO.output(4,True) ## Turn on GPIO pin 7
+        GPIO.output(24,True) ## Turn on GPIO pin 18
         time.sleep(CycleOnSec)
 
       if Output < 100:
         L.debug("==>Relay Off")
-        GPIO.output(4,False) ## Turn off GPIO pin 7
+        GPIO.output(24,False) ## Turn off GPIO pin 18
 
       # Write statu to file for reporting on web page
       L.debug( "Write status information to status file %s:" % StatFile )
@@ -396,14 +396,18 @@ while 1:
     wheel = '/'
   else:
     wheel = '-'
-  
+  disp.clear()
+  draw.rectangle((0,0,width,height), outline=0, fill=0)
   draw.text((x, top),  'IDLE '+wheel,                   font=font,fill=255)
   draw.text((x, top+8),'Temp '+str(int(ReadTmp))+'\x01',font=font,fill=255)
   draw.text((x, top+16),'',font=font, fill=255)
   draw.text((x, top+25),'',font=font, fill=255)
+  disp.image(image)
+  disp.display()
 
   # Check for 'Running' firing profile
   SQLConn = sqlite3.connect(SQLDB);
+  SQLConn.row_factory = sqlite3.Row
   SQLCur  = SQLConn.cursor()
   sql = 'SELECT * FROM profiles WHERE state=?'
   p = ('Runnning',)
@@ -465,7 +469,7 @@ while 1:
   
         time.sleep(0.5)
         Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd)
-        GPIO.output(4,False) ## Turn off GPIO pin 7
+        GPIO.output(24,False) ## Turn off GPIO pin 18
   
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
