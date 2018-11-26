@@ -6,6 +6,7 @@ import jinja2
 
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
 db = sqlite3.connect(SQLDB) 
+db.row_factory = sqlite3.Row
 cursor = db.cursor()
 env = jinja2.Environment(loader=jinja2.FileSystemLoader(['/home/pi/git/MyPiLN/template'])) 
 
@@ -61,8 +62,6 @@ if page == "view":
   ftr = template.render()
   
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
-
-
 
 elif page == "new":
 
@@ -123,8 +122,6 @@ elif page == "editcopy":
   
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-
-
 elif page == "run":
 
   template = env.get_template( "header.html" ) 
@@ -167,8 +164,6 @@ elif page == "run":
   ftr = template.render()
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
-
-
 
 elif page == "savenew":
   template = env.get_template( "header.html" ) 
@@ -359,8 +354,6 @@ elif page == "stop":
 
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-
-
 elif page == "notes_save":
 
   template = env.get_template( "header.html" ) 
@@ -413,7 +406,6 @@ else:
   ftr = template.render()
   
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
-
 
 cursor.close()
 db.close()
