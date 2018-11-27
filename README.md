@@ -29,22 +29,32 @@ Hardware:
 - 6 pack of thermocouples
     + bought for the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
 - 3 LEDs for 'relay on' indicator and resistors for LEDs;
-- 1 - unl2003a darlington transitor array to switch 12V coil on the relays
-     + untested;
+- 1 - uln2003a darlington transitor array to switch 12V coil on the relays
+     + untested, switch 12V on relay, using GPIO
+     + $1/each on amazon (also used for stepper motors), can switch 7 channels;
 - 3 - Deltrol  20852-81 relays
      + This is equivelent to relay Skutt uses to switch sections/zones
      + $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
 - 12V power supply
      + converts 120vac to 12vdc
      + $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1);
-- 5V buck converter to Pi power, (converts 12v to 5v) $4
+- 5V buck converter
+     + converts 12v to 5v USB out for Pi power
+     + $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
 - LCD screen and driver board, (most any hdmi monitor will work) ~$30;
 - Terminal blocks to distribute L1, L2, N and GND
   	 + Ground, $6 (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
   	 + L1,L2,Neutral, 3 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
 - Wired 2 lengths of  #10 awg to each section, all wires on the Kiln are Hi Temp Appliance wire;
-- Crimp terminals are Hi Temp Appliance, uses the same crimper used on the elements (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1), ~50 cent/each, The crimpers take muscle;
-- Grimp lugs #6 AWG copper (SELTERM 10 Pack 6 Gauge 6 AWG #10 Stud UL Heavy Duty Copper Crimp Lugs Welding Cable Bare Copper Eyelet Lug) 10@$9;
+- Crimp terminals, #10 awg, Hi Temp Appliance
+     +~$.16/each, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
+     + uses the same crimper used on the elements $16, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
+     + the crimpers take muscle
+- Crimp lugs #6 AWG copper
+     + $9 for 10 (https://www.amazon.com/gp/product/B073Y8Q9JQ/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
+-  Big crimper
+     + $25, (https://www.amazon.com/gp/product/B07D7Q54N2/ref=oh_aui_detailpage_o01_s03?ie=UTF8&psc=1)
+     + I crimp 2 times, first time with correct size, second time reduced one notch(correct size is loose);
 - Din rail mounts
      + $17/5 pair(https://www.amazon.com/gp/product/B01H1H86UU/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1);
 - Din rails
