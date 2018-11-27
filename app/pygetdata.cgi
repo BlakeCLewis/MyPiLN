@@ -6,7 +6,7 @@ import datetime
 import sqlite3
 import json
 import time
- 
+debug = 1 
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
  
 # Get json data from standard in
@@ -15,9 +15,10 @@ jsonin = ""
 for line in sys.stdin:
   jsonin += line
 
-#chkutime = jsonin.rstrip()
-#f= open("/tmp/pygetdata.txt","w+")
-#f.write(jsonin)
+if  1 == debug:
+  chkutime = jsonin.rstrip()
+  f= open("/tmp/pygetdata.txt","w+")
+  f.write(jsonin)
 
 if jsonin == "":
   print '\n{\n  "unix_timestamp": "' + str(int(time.time())) + '"\n}'
@@ -32,7 +33,9 @@ else:
 
   cur.execute(query['select'])
 
-  #jsoncol = json.dumps(query['columns'])
+  if  1 == debug:
+    jsoncol = json.dumps(query['columns'])
+
   retdata = '\n{"cols":' + json.dumps(query['columns']) + ',"rows":['
 
   for row in cur:
