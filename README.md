@@ -173,6 +173,7 @@ Stuff to get it to work:
 		sudo systemctl status pilnfired
 		
 - Tuning: 
+
         Patrick's suggestion
 		Proportional:	6.00
 		Integral:	0.04
