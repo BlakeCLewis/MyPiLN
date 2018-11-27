@@ -10,7 +10,7 @@ import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_MAX31855.MAX31855 as MAX31855
 
-# oled setup
+# --- oled setup ---
 import Adafruit_GPIO.SPI as SPI
 import Adafruit_SSD1306
 from PIL import Image
@@ -42,7 +42,7 @@ bottom = height-padding
 x = 0
 font = ImageFont.load_default()
 time.sleep(1)
-# end oled setup
+# --- end oled setup ---
 
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
 AppDir = '/home/pi/git/MyPiLN'
@@ -376,7 +376,6 @@ L.info("===START PiLN Firing Daemon===")
 L.info("Polling for 'Running' firing profiles...")
 
 while 1:
-
   # Get temp
   ReadCTmp  = Sensor.readTempC()
   ReadTmp   = CtoF(ReadCTmp)
@@ -418,9 +417,9 @@ while 1:
   draw.text((x, top+25),'',font=font, fill=255)
   disp.image(image)
   disp.display()
-  #------ display ------
+  #------ end display ------
 
-  # Check for 'Running' firing profile
+  # --- Check for 'Running' firing profile ---
   SQLConn = sqlite3.connect(SQLDB)
   SQLConn.row_factory = sqlite3.Row
   SQLCur  = SQLConn.cursor()
@@ -428,6 +427,7 @@ while 1:
   p = ( 'Running', )
   SQLCur.execute( sql, p )
   Data = SQLCur.fetchall()
+  #--- if Running prfile found set up to fire --
   if len(Data) > 0:
     RunID = Data[0]['run_id']
     Kp = float(Data[0]['p_param'])
@@ -453,6 +453,7 @@ while 1:
     SQLCur.execute( sql, p )
     ProfSegs = SQLCur.fetchall()
 
+    # --- begin firing loop ---
     for Row in ProfSegs:
       RunID     = Row['run_id']
       Seg       = Row['segment']
@@ -463,13 +464,13 @@ while 1:
 
       if SegCompStat == 1:
         L.debug("Profile stopped - skipping segment %d" % Seg)
-
       else:
         L.info( "Run ID %d, segment %d parameters: Target Temp: %0.2f, Rate: %0.2f," % ( RunID, Seg, TargetTmp, Rate ))
         L.info( "  Hold Minutes: %d, Window Seconds: %d" % ( HoldMin, Window ))
 
+        #--- mark started segment with datatime ---
         StTime=time.strftime('%Y-%m-%d %H:%M:%S')
-        L.debug("Update run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
+        L.debug("Update segments set run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
         sql = "UPDATE segments SET start_time=? WHERE run_id=? AND segment=?;"
         p = ( StTime, RunID, Seg )
         try:
@@ -478,11 +479,13 @@ while 1:
         except:
           SQLConn.rollback()
           L.error("DB Update failed!")
-  
         time.sleep(0.5)
+
+        #--- fire segment ---
         Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd)
         GPIO.output(HEAT,False) ## Turn off GPIO pin
-  
+        #--- end fire segment ---
+        #--- mark segment finished with datatime ---
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
         sql = 'UPDATE segments SET end_time=? WHERE run_id=? AND segment=?;'
@@ -493,10 +496,10 @@ while 1:
         except:
           SQLConn.rollback()
           L.error("DB Update failed!")
+    # --- end firing loop ---
 
     if SegCompStat == 1:
         L.info("Profile stopped - Not updating profile end time")
-
     else:
       EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
       L.debug("Update profile end time to %s and state to %s for run id %d" % ( EndTime, 'Completed', RunID ) )
