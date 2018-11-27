@@ -208,8 +208,9 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       print str(ReadTmp)  + 'F'
       print str(LastTmp)  + 'L'
       print ''
-      #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadCTmp == 0 or ReadCTmp > 1315:
-      #  ReadTmp = LastTmp
+      #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
+      if math.isnan(ReadTmp) or ReadCTmp == 0:
+        ReadTmp = LastTmp
 
       if RampTrg == 0:
         RampTmp += StepTmp
@@ -297,14 +298,14 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       if Output > 0:
         L.debug("==>Relay On")
-        GPIO.output(HEAT,True) ## Turn on GPIO pin 18
+        GPIO.output(HEAT,True) ## Turn on GPIO
         time.sleep(CycleOnSec)
 
       if Output < 100:
         L.debug("==>Relay Off")
-        GPIO.output(HEAT,False) ## Turn off GPIO pin 18
+        GPIO.output(HEAT,False) ## Turn off GPIO
 
-      # Write statu to file for reporting on web page
+      # Write status to file for reporting on web page
       L.debug( "Write status information to status file %s:" % StatFile )
       sfile = open(StatFile,"w+")
       sfile.write('{\n' +
@@ -329,14 +330,16 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       else:
         wheel = '-'
 
+      #------ display ------
       disp.clear()
-      draw.rectangle((0,0,width,height), outline=0, fill=0)
+      draw.rectangle((0,0,width,height), outline=0, fill=0) ##fill display with black
       draw.text((x,top),   'Profile: '+str(RunID)+'Seg: '+str(Seg)+' '+wheel                 ,font=font,fill=255)
       draw.text((x,top+8), 'Stat :'   +str(RunState)[0:14]                                   ,font=font,fill=255)
       draw.text((x,top+16),'Tmp: '    +str(int(ReadTmp))+'\x01 Ramp'+str(int(RampTmp))+'\x01',font=font,fill=255)
       draw.text((x,top+25),'Trgt: '   +str(int(TargetTmp))+'\x01 Tm'+str(RemainTime)         ,font=font,fill=255)
       disp.image(image)
       disp.display()
+      #------ display ------
 
       L.debug("Writing stats to Firing DB table...")
       sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? );"
@@ -405,6 +408,8 @@ while 1:
     wheel = '/'
   else:
     wheel = '-'
+
+  #------ display ------
   disp.clear()
   draw.rectangle((0,0,width,height), outline=0, fill=0)
   draw.text((x, top),  'IDLE '+wheel,                   font=font,fill=255)
@@ -413,6 +418,7 @@ while 1:
   draw.text((x, top+25),'',font=font, fill=255)
   disp.image(image)
   disp.display()
+  #------ display ------
 
   # Check for 'Running' firing profile
   SQLConn = sqlite3.connect(SQLDB)
