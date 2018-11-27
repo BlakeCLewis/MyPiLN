@@ -87,9 +87,9 @@ Stuff to get it to work:
 
 - Install PiLN files in /home and create log directory:
 
-                sudo adduser PiLN
-                su - PiLN
-		git clone https://github.com/pvarney/PiLN .
+		sudo adduser PiLN
+		su - PiLN
+		git clone git@github.com:BlakeCLewis/MyPiLN.git .
 		mkdir ./log
 		
 - Install sqlite3:
@@ -172,12 +172,14 @@ Stuff to get it to work:
 		sudo systemctl start pilnfired
 		sudo systemctl status pilnfired
 		
-- Tuning: I spent a while adjusting the PID parameters to get the best results and am still tuning. Your tuning parameters will depend on your specific application, but I used the following which might be a good starting point:
-
+- Tuning: 
+        Patrick's suggestion
 		Proportional:	6.00
 		Integral:	0.04
 		Derivative:	0.00
-	I also had good results setting the interval seconds to 10, which is the default.
+        Time internal: 10 seconds
+
+	    I use 'time interval = 4 seconds' for the blow dryer test rig.
 
 Using the Web App:
 - On the same network that the RPi is connected to, go to http://<RPi_IPAddress>/pilnapp/home.cgi
