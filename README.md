@@ -1,8 +1,9 @@
 
 #Web-based Raspberry Pi Kiln Control Application:
-- Forked of pvarney/PiLN
-- Switched out LCD for pioled
-- Switched out MySQL for sqlite3
+- forked of pvarney/PiLN
+- switched out LCD for pioled
+- switched out MySQL for sqlite3
+- still need to figure out the loging/debug stuff better
 
 
 WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
@@ -11,7 +12,10 @@ Future improvements:
 - overheat shutdown
 - Kiln Sitter(KS) as a sensor, use an Orton KS bar in KS and wire KS to GPIO;
 - performance watchdog, shutdown when a minimum rate cannot be maintained;
-- abstract thermocouple code to ease changing thermocouple chip (MAX31856 has 50/60hz filter and a correction table)(MAX31850 onewire);
+- abstract thermocouple code to ease changing thermocouple chip
+   + MAX31856 has 50/60hz filter and a correction table
+   + MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO (zone control);
+   + S-type
 - abstract display code to ease changing display (LCD, pioled);
 - zone control, thermocouple/section, conrol sections independently);
 - inductive current sensors: monitor electric usage to calculate cost of firing, also as an element fault indicator;
@@ -66,6 +70,13 @@ Hardware:
      + tap a hole screw in a screw and use the $10 Harbor Frieght angle grinder to flush it up on the back of the box.
 
 Thermocouple tip: One side of both the thermocouple and special wire is magnetic (red side), Test with magnet to wire correctly. 
+
+
+I built a kiln shed and I am about ready to put the controller on a kiln:
+- #0 Jen-Ken, w/ kiln sitter, 2 ring, 10 brick 22" inside height, 06 bisques labors the last 100;
+- #2 KS1027 needs elements and lid repair;
+- #1 KS1027  Skutt, converted to gas, hit 1976F with one burner. (adding burner, 100lb LP tank, tweaking down draft).
+
 
 Stuff to get it to work:
 
@@ -174,13 +185,18 @@ Stuff to get it to work:
 		
 - Tuning: 
 
-        Patrick's suggestion
-		Proportional:	6.00
-		Integral:	0.04
-		Derivative:	0.00
-        Time internal: 10 seconds
+       + pvarney's suggestion
+		  Proportional:	6.00
+		  Integral:	0.04
+		  Derivative:	0.00
+          Time internal: 10 seconds
 
-	    I use 'time interval = 4 seconds' for the blow dryer test rig.
+	   +blow dryer test rig
+          Proportional:   6.00
+          Integral:   0.04
+          Derivative: 0.00
+          Time internal: 4 seconds
+
 
 Using the Web App:
 - On the same network that the RPi is connected to, go to http://<RPi_IPAddress>/pilnapp/home.cgi
