@@ -1,6 +1,5 @@
 # CLONE of pvarney/PiLN
-branch blake_1 is my working branch
-converting to sqlite
+branch blake_1 is my working branch converting to sqlite and pioled
 
 
 
