@@ -1,12 +1,10 @@
+WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
 
-#Web-based Raspberry Pi Kiln Control Application:
+Web-based Raspberry Pi Kiln Control Application:
 - forked of pvarney/PiLN
 - switched out LCD for pioled
 - switched out MySQL for sqlite3
 - still need to figure out the loging/debug stuff better
-
-
-WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
 
 Future improvements:
 - overheat shutdown
