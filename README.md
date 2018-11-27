@@ -20,30 +20,44 @@ Future improvements:
 - crash/loss of power recovery;
 
 Hardware:
-- Test rig - Raspberry Pi zero w, SSR, $2 k-type thermocouple, adafruit MAX31855, hair blow dryer and a cardboard box;
-- I use a pi with a $7 thermocouple on the manual kiln during bisque firing to monitor temps and rates;
-- MAX31855 thermocouple module from Adafruit (https://www.adafruit.com/product/269);
-- High temperature (2372 F) type K thermocouple ($7) (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
-- 6 pack of thermocouples for the thermocouple wire 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
+- Test rig - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
+- I use a pi with $7 thermocouple (below) on the manual kiln during bisque firing to monitor temps and rates;
+- MAX31855 thermocouple module
+    + $17.50, Adafruit (https://www.adafruit.com/product/269);
+- High temperature (2372 F) type K thermocouple
+    + $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
+- 6 pack of thermocouples
+    + bought for the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
 - 3 LEDs for 'relay on' indicator and resistors for LEDs;
-- 1 - unl2003a darlington transitor array to switch 12V coil on the relays;
-- 3 - Deltrol  20852-81 relays $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81) (This is equivelent to relay Skutt uses to switch sections/zones);
-- 12V power supply (converts 120vac to 12vdc) (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1) $20
-     + 5V buck converter to power PI (reduces 12v to 5v) $4
-     + LCD screen and driver board (most any hdmi monitor will work) ~$30;
+- 1 - unl2003a darlington transitor array to switch 12V coil on the relays
+     + untested;
+- 3 - Deltrol  20852-81 relays
+     + This is equivelent to relay Skutt uses to switch sections/zones
+     + $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
+- 12V power supply
+     + converts 120vac to 12vdc
+     + $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1);
+- 5V buck converter to Pi power, (converts 12v to 5v) $4
+- LCD screen and driver board, (most any hdmi monitor will work) ~$30;
 - Terminal blocks to distribute L1, L2, N and GND
-  	 + Ground: 1 - (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1) $6
-  	 + L1,L2,Neutral: 3 - (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1) $7/each;
-- Wired 2 #10 awg to each section, all wires on the Kiln are Hi Temp Appliance wire;
+  	 + Ground, $6 (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
+  	 + L1,L2,Neutral, 3 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
+- Wired 2 lengths of  #10 awg to each section, all wires on the Kiln are Hi Temp Appliance wire;
 - Crimp terminals are Hi Temp Appliance, uses the same crimper used on the elements (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1), ~50 cent/each, The crimpers take muscle;
 - Grimp lugs #6 AWG copper (SELTERM 10 Pack 6 Gauge 6 AWG #10 Stud UL Heavy Duty Copper Crimp Lugs Welding Cable Bare Copper Eyelet Lug) 10@$9;
-- Din rail mounts (https://www.amazon.com/gp/product/B01H1H86UU/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1) $17/5 pair;
-- Din rails (https://www.amazon.com/gp/product/B01FT485S0/ref=oh_aui_detailpage_o02_s01?ie=UTF8&psc=1) $5/each;
+- Din rail mounts
+     + $17/5 pair(https://www.amazon.com/gp/product/B01H1H86UU/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1);
+- Din rails
+     + $5/each (https://www.amazon.com/gp/product/B01FT485S0/ref=oh_aui_detailpage_o02_s01?ie=UTF8&psc=1);
 - 14 THHN stranded, hardware store, to power 12V supply, white,red,greem 2' each
-  
+- heat shrink, Harbor Frieght
+- #10 32tpi tap and #21 jobber drill bit
+     + I have lots of 10-32 screws from rack mount hardware extras(data center)
+     + tap a hole screw in a screw and use the $10 Harbor Frieght angle grinder to flush it up on the back of the box.
+
 Thermocouple tip: One side of both the thermocouple and special wire is magnetic (red side), Test with magnet to wire correctly. 
 
-Install:
+Stuff to get it to work:
 
 - Pin-Out:
 
