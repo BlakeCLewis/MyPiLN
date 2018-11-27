@@ -1,6 +1,6 @@
 
 #Web-based Raspberry Pi Kiln Control Application:
-- Forked off of pvarney/PiLN
+- Forked of pvarney/PiLN
 - Switched out LCD for pioled
 - Switched out MySQL for sqlite3
 
