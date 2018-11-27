@@ -161,7 +161,7 @@ Stuff to get it to work:
 		sqlite3 /var/www/db/PiLN/PiLN.sqlite3
 		sqlite> .read /home/PiLN/PiLN.sql;
 
-- To enable automatic startup of the daemon (Had to do the copy/enable/delete/link in order to get systemctl enable to work):
+- (I do not use this yet) To enable automatic startup of the daemon (Had to do the copy/enable/delete/link in order to get systemctl enable to work):
 
 		cp /home/PiLN/daemon/pilnfired.service /etc/systemd/system/
 		sudo systemctl daemon-reload
