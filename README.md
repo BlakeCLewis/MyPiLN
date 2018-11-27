@@ -1,9 +1,9 @@
-# CLONE of pvarney/PiLN
-branch blake_1 is my working branch converting to sqlite and pioled
 
+#Web-based Raspberry Pi Kiln Control Application:
+- Forked off of pvarney/PiLN
+- Switched out LCD for pioled
+- Switched out MySQL for sqlite3
 
-
-Web-based Raspberry Pi Kiln Control Application
 
 WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
 
