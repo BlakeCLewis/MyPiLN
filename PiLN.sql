@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS firing (
   int_temp   NUMERIC DEFAULT NULL,
   pid_output NUMERIC NOT NULL,
   PRIMARY KEY(run_id,segment,dt),
-  FOREIGN KEY(run_id) REFERENCES profiles(run_id)
 );
 -- --------------------------------------------------------
 --
