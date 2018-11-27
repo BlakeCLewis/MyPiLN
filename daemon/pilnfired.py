@@ -44,7 +44,6 @@ font = ImageFont.load_default()
 time.sleep(1)
 # end oled setup
 
-# Set up sqlite3 connection
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
 AppDir = '/home/pi/git/MyPiLN'
 
@@ -331,10 +330,10 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       draw.text((x,top+25),'Trgt: '   +str(int(TargetTmp))+'\x01 Tm'+str(RemainTime)         ,font=font,fill=255)
 
       L.debug("Writing stats to Firing DB table...")
-      sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? )"
-      p = (RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output)
+      sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? );"
+      p = ( RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
       try:
-        SQLCur.execute(sql,p)
+        SQLCur.execute( sql, p )
         SQLConn.commit()
       except:
         SQLConn.rollback()
@@ -342,9 +341,9 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
 
       # Check if profile is still in running state
-      sql = 'SELECT * FROM profiles WHERE state=? AND run_id=?'
-      p = ('Running', RunID)
-      SQLCur.execute(sql,p)
+      sql = 'SELECT * FROM profiles WHERE state=? AND run_id=?;'
+      p = ( 'Running', RunID )
+      SQLCur.execute( sql, p )
       if SQLCur.rowcount == 0:
         L.warn("Profile no longer in running state - exiting firing")
         SegCompStat = 1 
@@ -406,27 +405,27 @@ while 1:
   disp.display()
 
   # Check for 'Running' firing profile
-  SQLConn = sqlite3.connect(SQLDB);
+  SQLConn = sqlite3.connect(SQLDB)
   SQLConn.row_factory = sqlite3.Row
   SQLCur  = SQLConn.cursor()
-  sql = 'SELECT * FROM profiles WHERE state=?'
-  p = ('Runnning',)
-  SQLCur.execute(sql,p)
+  sql = 'SELECT * FROM profiles WHERE state=?;'
+  p = ( 'Runnning', )
+  SQLCur.execute( sql, p )
+  Data = SQLCur.fetchall()
 
-  if SQLCur.rowcount > 0:
-    Data = SQLCur.fetchone()
-    RunID = Data[0]
-    Kp = float(Data[3])
-    Ki = float(Data[4])
-    Kd = float(Data[5])
+  if len(Data) > 0:
+    RunID = Data[0]['run_id']
+    Kp = float(Data[0]['p_param'])
+    Ki = float(Data[0]['i_param'])
+    Kd = float(Data[0]['d_param'])
     L.info("Run ID %d is active - starting firing profile" % RunID)
 
     StTime=time.strftime('%Y-%m-%d %H:%M:%S')
     L.debug('Update profile %d start time to %s' % ( RunID, StTime ) )
-    sql = 'UPDATE profiles SET start_time=? WHERE run_id=?'
-    p = (StTime, RunID)
+    sql = 'UPDATE profiles SET start_time=? WHERE run_id=?;'
+    p = ( StTime, RunID )
     try:
-      SQLCur.execute(sql,p)
+      SQLCur.execute( sql, p )
       SQLConn.commit()
     except:
       SQLConn.rollback()
@@ -434,18 +433,18 @@ while 1:
 
     # Get segments
     L.info("Get segments for run ID %d" % RunID)
-    sql = 'SELECT * FROM segments WHERE run_id=?'
-    p = (RunID)
-    SQLCur.execute(sql,p)
+    sql = 'SELECT * FROM segments WHERE run_id=?;'
+    p = ( RunID, )
+    SQLCur.execute( sql, p )
     ProfSegs = SQLCur.fetchall()
 
     for Row in ProfSegs:
-      RunID = Row[0]
-      Seg = Row[1]
-      TargetTmp = Row[2]
-      Rate = Row[3]
-      HoldMin = Row[4]
-      Window = Row[5]
+      RunID     = Row['run_id']
+      Seg       = Row['segment']
+      TargetTmp = Row['set_temp']
+      Rate      = Row['rate']
+      HoldMin   = Row['hold_min']
+      Window    = Row['int_sec']
 
       if SegCompStat == 1:
         L.debug("Profile stopped - skipping segment %d" % Seg)
@@ -458,10 +457,10 @@ while 1:
 
         StTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
-        sql = "UPDATE segments SET start_time=? WHERE run_id=? AND segment=?"
-        p = (StTime, RunID, Seg)
+        sql = "UPDATE segments SET start_time=? WHERE run_id=? AND segment=?;"
+        p = ( StTime, RunID, Seg )
         try:
-          SQLCur.execute(sql,p)
+          SQLCur.execute( sql, p )
           SQLConn.commit()
         except:
           SQLConn.rollback()
@@ -473,10 +472,10 @@ while 1:
   
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
-        sql = 'UPDATE segments SET end_time=? WHERE run_id=? AND segment=?'
-        p = (EndTime, RunID, Seg)
+        sql = 'UPDATE segments SET end_time=? WHERE run_id=? AND segment=?;'
+        p = ( EndTime, RunID, Seg )
         try:
-          SQLCur.execute(sql,p)
+          SQLCur.execute( sql, p )
           SQLConn.commit()
         except:
           SQLConn.rollback()
@@ -488,10 +487,10 @@ while 1:
     else:
       EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
       L.debug("Update profile end time to %s and state to %s for run id %d" % ( EndTime, 'Completed', RunID ) )
-      sql = 'UPDATE profiles SET end_time=?, state=? WHERE run_id=?'
-      p = (EndTime,'Completed', RunID)
+      sql = 'UPDATE profiles SET end_time=?, state=? WHERE run_id=?;'
+      p = ( EndTime,'Completed', RunID )
       try:
-        SQLCur.execute(sql,p)
+        SQLCur.execute( sql, p )
         SQLConn.commit()
       except:
         SQLConn.rollback()
