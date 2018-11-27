@@ -74,12 +74,13 @@ DO  = 17
 Sensor = MAX31855.MAX31855(CLK, CS, DO)
 
 # Pin setup for relay
-GPIO.setup (24, GPIO.OUT) ## Setup GPIO Pin 16 to OUT
-GPIO.output(24, GPIO.LOW) ## Turn off GPIO Pin 16
+HEAT = 24 ## GPIO Pin 16
+GPIO.setup (HEAT, GPIO.OUT) ## Setup GPIO Pin to OUT
+GPIO.output(HEAT, GPIO.LOW) ## Turn off GPIO
 
 def clean(*args):
   print ("\nProgram ending! Cleaning up...\n")
-  GPIO.output(24,False) ## Turn off GPIO pin 18
+  GPIO.output(HEAT,False) ## Turn off GPIO pin
   GPIO.cleanup()       ## this ensures a clean exit
   print ("All clean - Stopping.\n")
   os._exit(0)
@@ -203,8 +204,12 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       ReadTmp   = CtoF(ReadCTmp)
       ReadCITmp = Sensor.readInternalC()
       ReadITmp  = CtoF(ReadCITmp)
-      if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
-        ReadTmp = LastTmp
+      print str(ReadCTmp) + 'C' 
+      print str(ReadTmp)  + 'F'
+      print str(LastTmp)  + 'L'
+      print ''
+      #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadCTmp == 0 or ReadCTmp > 1315:
+      #  ReadTmp = LastTmp
 
       if RampTrg == 0:
         RampTmp += StepTmp
@@ -292,12 +297,12 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       if Output > 0:
         L.debug("==>Relay On")
-        GPIO.output(24,True) ## Turn on GPIO pin 18
+        GPIO.output(HEAT,True) ## Turn on GPIO pin 18
         time.sleep(CycleOnSec)
 
       if Output < 100:
         L.debug("==>Relay Off")
-        GPIO.output(24,False) ## Turn off GPIO pin 18
+        GPIO.output(HEAT,False) ## Turn off GPIO pin 18
 
       # Write statu to file for reporting on web page
       L.debug( "Write status information to status file %s:" % StatFile )
@@ -324,10 +329,14 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       else:
         wheel = '-'
 
+      disp.clear()
+      draw.rectangle((0,0,width,height), outline=0, fill=0)
       draw.text((x,top),   'Profile: '+str(RunID)+'Seg: '+str(Seg)+' '+wheel                 ,font=font,fill=255)
       draw.text((x,top+8), 'Stat :'   +str(RunState)[0:14]                                   ,font=font,fill=255)
       draw.text((x,top+16),'Tmp: '    +str(int(ReadTmp))+'\x01 Ramp'+str(int(RampTmp))+'\x01',font=font,fill=255)
       draw.text((x,top+25),'Trgt: '   +str(int(TargetTmp))+'\x01 Tm'+str(RemainTime)         ,font=font,fill=255)
+      disp.image(image)
+      disp.display()
 
       L.debug("Writing stats to Firing DB table...")
       sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? );"
@@ -344,7 +353,8 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       sql = 'SELECT * FROM profiles WHERE state=? AND run_id=?;'
       p = ( 'Running', RunID )
       SQLCur.execute( sql, p )
-      if SQLCur.rowcount == 0:
+      result = SQLCur.fetchall()
+      if len(result) == 0:
         L.warn("Profile no longer in running state - exiting firing")
         SegCompStat = 1 
         RunState = "Stopped"
@@ -409,10 +419,9 @@ while 1:
   SQLConn.row_factory = sqlite3.Row
   SQLCur  = SQLConn.cursor()
   sql = 'SELECT * FROM profiles WHERE state=?;'
-  p = ( 'Runnning', )
+  p = ( 'Running', )
   SQLCur.execute( sql, p )
   Data = SQLCur.fetchall()
-
   if len(Data) > 0:
     RunID = Data[0]['run_id']
     Kp = float(Data[0]['p_param'])
@@ -450,10 +459,8 @@ while 1:
         L.debug("Profile stopped - skipping segment %d" % Seg)
 
       else:
-        L.info( "Run ID %d, segment %d parameters: Target Temp: %0.2f, Rate: %0.2f," %
-          ( RunID, Seg, TargetTmp, Rate ))
-        L.info( "  Hold Minutes: %d, Window Seconds: %d" %
-          ( HoldMin, Window ))
+        L.info( "Run ID %d, segment %d parameters: Target Temp: %0.2f, Rate: %0.2f," % ( RunID, Seg, TargetTmp, Rate ))
+        L.info( "  Hold Minutes: %d, Window Seconds: %d" % ( HoldMin, Window ))
 
         StTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
@@ -468,7 +475,7 @@ while 1:
   
         time.sleep(0.5)
         Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd)
-        GPIO.output(24,False) ## Turn off GPIO pin 18
+        GPIO.output(HEAT,False) ## Turn off GPIO pin
   
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
@@ -488,7 +495,7 @@ while 1:
       EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
       L.debug("Update profile end time to %s and state to %s for run id %d" % ( EndTime, 'Completed', RunID ) )
       sql = 'UPDATE profiles SET end_time=?, state=? WHERE run_id=?;'
-      p = ( EndTime,'Completed', RunID )
+      p = ( EndTime, 'Completed', RunID )
       try:
         SQLCur.execute( sql, p )
         SQLConn.commit()
