@@ -6,44 +6,46 @@ import time
 import math
 import logging as L
 import sys
-import MySQLdb
+import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_MAX31855.MAX31855 as MAX31855
-import RPi.GPIO as GPIO
-from RPLCD import CharLCD
 
-#Set up LCD
-lcd = CharLCD(pin_rs=17, pin_rw=None, pin_e=27, pins_data=[12, 16, 20, 21],
-              numbering_mode=GPIO.BCM,
-              cols=20, rows=4, dotsize=8,
-              auto_linebreaks=True)
-
-lcd.create_char(1, [0b01100,
-                    0b10010,
-                    0b10010,
-                    0b01100,
-                    0b00000,
-                    0b00000,
-                    0b00000,
-                    0b00000])
-lcd.create_char(2, [0b00000,
-                    0b10000,
-                    0b01000,
-                    0b00100,
-                    0b00010,
-                    0b00001,
-                    0b00000,
-                    0b00000])
-
-#Wait for LCD to start up - otherwise you get garbage
+# oled setup
+import Adafruit_GPIO.SPI as SPI
+import Adafruit_SSD1306
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import subprocess
+RST = None # on the PiOLED this pin isnt used
+DC = 23
+SPI_PORT = 0
+SPI_DEVICE = 0
+disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
+disp.begin()
+disp.clear()
+disp.display()
+# Create blank image for drawing.
+width = disp.width
+height = disp.height
+# Make sure to create image with mode '1' for 1-bit color.
+image = Image.new('1', (width, height))
+# Get drawing object to draw on image.
+draw = ImageDraw.Draw(image)
+# Draw a black filled box to clear the image.
+draw.rectangle((0,0,width,height), outline=0, fill=0)
+# Define some constants to allow easy resizing of shapes.
+padding = -2
+top = padding
+bottom = height-padding
+# Move left to right keeping track of the current x position for drawing shapes.
+x = 0
+font = ImageFont.load_default()
 time.sleep(1)
+# end oled setup
 
-# Set up MySQL Connection
-SQLHost = '127.0.0.1'
-SQLUser = 'piln'
-SQLPass = 'p!lnp@ss'
-SQLDB   = 'PiLN'
-AppDir  = '/home/PiLN'
+SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
+AppDir = '/home/pi/git/MyPiLN'
 
 #Status File
 StatFile = '/var/www/html/pilnstat.json'
@@ -66,22 +68,21 @@ LastTmp  = 0.0
 wheel = '-'
 
 # MAX31855 Pins/Setup
-CLK = 25
-CS  = 24
-DO  = 18
+CS  = 27
+CLK = 22
+DO  = 17
 Sensor = MAX31855.MAX31855(CLK, CS, DO)
 
 # Pin setup for relay
-GPIO.setup(4, GPIO.OUT) ## Setup GPIO Pin 7 to OUT
-GPIO.output(4,False) ## Turn off GPIO pin 7
+HEAT = 24 ## GPIO Pin 16
+GPIO.setup (HEAT, GPIO.OUT) ## Setup GPIO Pin to OUT
+GPIO.output(HEAT, GPIO.LOW) ## Turn off GPIO
 
 def clean(*args):
-  print "\nProgram ending! Cleaning up...\n"  
-  GPIO.output(4,False) ## Turn off GPIO pin 4
-  lcd.close(clear=True)
-  time.sleep(0.5)
-  GPIO.cleanup() # this ensures a clean exit  
-  print "All clean - Stopping.\n"
+  print ("\nProgram ending! Cleaning up...\n")
+  GPIO.output(HEAT,False) ## Turn off GPIO pin
+  GPIO.cleanup()       ## this ensures a clean exit
+  print ("All clean - Stopping.\n")
   os._exit(0)
 
 for sig in (SIGABRT, SIGINT, SIGTERM):
@@ -203,7 +204,12 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       ReadTmp   = CtoF(ReadCTmp)
       ReadCITmp = Sensor.readInternalC()
       ReadITmp  = CtoF(ReadCITmp)
-      if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
+      print str(ReadCTmp) + 'C' 
+      print str(ReadTmp)  + 'F'
+      print str(LastTmp)  + 'L'
+      print ''
+      #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
+      if math.isnan(ReadTmp) or ReadCTmp == 0:
         ReadTmp = LastTmp
 
       if RampTrg == 0:
@@ -292,14 +298,14 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       if Output > 0:
         L.debug("==>Relay On")
-        GPIO.output(4,True) ## Turn on GPIO pin 7
+        GPIO.output(HEAT,True) ## Turn on GPIO
         time.sleep(CycleOnSec)
 
       if Output < 100:
         L.debug("==>Relay Off")
-        GPIO.output(4,False) ## Turn off GPIO pin 7
+        GPIO.output(HEAT,False) ## Turn off GPIO
 
-      # Write statu to file for reporting on web page
+      # Write status to file for reporting on web page
       L.debug( "Write status information to status file %s:" % StatFile )
       sfile = open(StatFile,"w+")
       sfile.write('{\n' +
@@ -323,23 +329,23 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
         wheel = '/'
       else:
         wheel = '-'
-    
-      lcd.clear()
-      lcd.cursor_pos = (0, 0)
-      lcd.write_string(u'Profile' + str(RunID) + ' Seg' + str(Seg) + ' ' + wheel )
-      lcd.cursor_pos = (1, 0)
-      lcd.write_string(u'Stat:' + str(RunState)[0:14] )
-      lcd.cursor_pos = (2, 0)
-      lcd.write_string(u'Tmp' +  str(int(ReadTmp)) + '\x01 Ramp' + str(int(RampTmp)) + '\x01' )
-      lcd.cursor_pos = (3, 0)
-      lcd.write_string(u'Trgt' + str(int(TargetTmp)) + '\x01 Tm' + str(RemainTime) )
-      #lcd.write_string(u'Trgt ' + str(int(TargetTmp)) + '\x01,Tm ' )
-      #print 'Trgt ' + str(int(TargetTmp)) + ',Tm ' + str(RemainTime)
+
+      #------ display ------
+      disp.clear()
+      draw.rectangle((0,0,width,height), outline=0, fill=0) ##fill display with black
+      draw.text((x,top),   'Profile: '+str(RunID)+'Seg: '+str(Seg)+' '+wheel                 ,font=font,fill=255)
+      draw.text((x,top+8), 'Stat :'   +str(RunState)[0:14]                                   ,font=font,fill=255)
+      draw.text((x,top+16),'Tmp: '    +str(int(ReadTmp))+'\x01 Ramp'+str(int(RampTmp))+'\x01',font=font,fill=255)
+      draw.text((x,top+25),'Trgt: '   +str(int(TargetTmp))+'\x01 Tm'+str(RemainTime)         ,font=font,fill=255)
+      disp.image(image)
+      disp.display()
+      #------ display ------
 
       L.debug("Writing stats to Firing DB table...")
-      SQL = "INSERT INTO Firing (run_id, segment, datetime, set_temp, temp, int_temp, pid_output) VALUES ( '%d', '%d', '%s', '%.2f', '%.2f', '%.2f', '%.2f' )" % ( RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
+      sql = "INSERT INTO firing (run_id, segment, dt, set_temp, temp, int_temp, pid_output) VALUES ( ?,?,?,?,?,?,? );"
+      p = ( RunID, Seg, time.strftime('%Y-%m-%d %H:%M:%S'), RampTmp, ReadTmp, ReadITmp, Output )
       try:
-        SQLCur.execute(SQL)
+        SQLCur.execute( sql, p )
         SQLConn.commit()
       except:
         SQLConn.rollback()
@@ -347,9 +353,11 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
 
       # Check if profile is still in running state
-      RowsCnt = SQLCur.execute("select * from Profiles where state='Running' and run_id=%d" % RunID)
-
-      if RowsCnt == 0:
+      sql = 'SELECT * FROM profiles WHERE state=? AND run_id=?;'
+      p = ( 'Running', RunID )
+      SQLCur.execute( sql, p )
+      result = SQLCur.fetchall()
+      if len(result) == 0:
         L.warn("Profile no longer in running state - exiting firing")
         SegCompStat = 1 
         RunState = "Stopped"
@@ -400,40 +408,39 @@ while 1:
     wheel = '/'
   else:
     wheel = '-'
-  
-  lcd.clear()
-  lcd.cursor_pos = (0, 0)
-  lcd.write_string(u'IDLE ' + wheel )
-  lcd.cursor_pos = (2, 0)
-  lcd.write_string(u'Temp ' +  str(int(ReadTmp)) + '\x01')
 
-#{
-#  "proc_update_utime": "1506396470",
-#  "readtemp": "145",
-#  "run_profile": "none",
-#  "run_segment": "n/a",
-#  "targettemp": "n/a"
-#}
-
+  #------ display ------
+  disp.clear()
+  draw.rectangle((0,0,width,height), outline=0, fill=0)
+  draw.text((x, top),  'IDLE '+wheel,                   font=font,fill=255)
+  draw.text((x, top+8),'Temp '+str(int(ReadTmp))+'\x01',font=font,fill=255)
+  draw.text((x, top+16),'',font=font, fill=255)
+  draw.text((x, top+25),'',font=font, fill=255)
+  disp.image(image)
+  disp.display()
+  #------ display ------
 
   # Check for 'Running' firing profile
-  SQLConn = MySQLdb.connect(SQLHost, SQLUser, SQLPass, SQLDB);
+  SQLConn = sqlite3.connect(SQLDB)
+  SQLConn.row_factory = sqlite3.Row
   SQLCur  = SQLConn.cursor()
-  RowsCnt = SQLCur.execute("select * from Profiles where state='Running'")
-
-  if RowsCnt > 0:
-    Data = SQLCur.fetchone()
-    RunID = Data[0]
-    Kp = float(Data[3])
-    Ki = float(Data[4])
-    Kd = float(Data[5])
+  sql = 'SELECT * FROM profiles WHERE state=?;'
+  p = ( 'Running', )
+  SQLCur.execute( sql, p )
+  Data = SQLCur.fetchall()
+  if len(Data) > 0:
+    RunID = Data[0]['run_id']
+    Kp = float(Data[0]['p_param'])
+    Ki = float(Data[0]['i_param'])
+    Kd = float(Data[0]['d_param'])
     L.info("Run ID %d is active - starting firing profile" % RunID)
 
     StTime=time.strftime('%Y-%m-%d %H:%M:%S')
-    L.debug("Update profile %d start time to %s" % ( RunID, StTime ) )
-    SQL = "UPDATE Profiles SET start_time='%s' where run_id=%d" % ( StTime, RunID )
+    L.debug('Update profile %d start time to %s' % ( RunID, StTime ) )
+    sql = 'UPDATE profiles SET start_time=? WHERE run_id=?;'
+    p = ( StTime, RunID )
     try:
-      SQLCur.execute(SQL)
+      SQLCur.execute( sql, p )
       SQLConn.commit()
     except:
       SQLConn.rollback()
@@ -441,32 +448,32 @@ while 1:
 
     # Get segments
     L.info("Get segments for run ID %d" % RunID)
-    SQL="select * from Segments where run_id=%d" % RunID
-    SQLCur.execute(SQL)
+    sql = 'SELECT * FROM segments WHERE run_id=?;'
+    p = ( RunID, )
+    SQLCur.execute( sql, p )
     ProfSegs = SQLCur.fetchall()
 
     for Row in ProfSegs:
-      RunID = Row[0]
-      Seg = Row[1]
-      TargetTmp = Row[2]
-      Rate = Row[3]
-      HoldMin = Row[4]
-      Window = Row[5]
+      RunID     = Row['run_id']
+      Seg       = Row['segment']
+      TargetTmp = Row['set_temp']
+      Rate      = Row['rate']
+      HoldMin   = Row['hold_min']
+      Window    = Row['int_sec']
 
       if SegCompStat == 1:
         L.debug("Profile stopped - skipping segment %d" % Seg)
 
       else:
-        L.info( "Run ID %d, segment %d parameters: Target Temp: %0.2f, Rate: %0.2f," %
-          ( RunID, Seg, TargetTmp, Rate ))
-        L.info( "  Hold Minutes: %d, Window Seconds: %d" %
-          ( HoldMin, Window ))
+        L.info( "Run ID %d, segment %d parameters: Target Temp: %0.2f, Rate: %0.2f," % ( RunID, Seg, TargetTmp, Rate ))
+        L.info( "  Hold Minutes: %d, Window Seconds: %d" % ( HoldMin, Window ))
 
         StTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d start time to %s" % ( RunID, Seg, StTime ) )
-        SQL = "UPDATE Segments SET start_time='%s' where run_id=%d and segment=%d" % ( StTime, RunID, Seg )
+        sql = "UPDATE segments SET start_time=? WHERE run_id=? AND segment=?;"
+        p = ( StTime, RunID, Seg )
         try:
-          SQLCur.execute(SQL)
+          SQLCur.execute( sql, p )
           SQLConn.commit()
         except:
           SQLConn.rollback()
@@ -474,13 +481,14 @@ while 1:
   
         time.sleep(0.5)
         Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd)
-        GPIO.output(4,False) ## Turn off GPIO pin 7
+        GPIO.output(HEAT,False) ## Turn off GPIO pin
   
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
-        SQL = "UPDATE Segments SET end_time='%s' where run_id=%d and segment=%d" % ( EndTime, RunID, Seg )
+        sql = 'UPDATE segments SET end_time=? WHERE run_id=? AND segment=?;'
+        p = ( EndTime, RunID, Seg )
         try:
-          SQLCur.execute(SQL)
+          SQLCur.execute( sql, p )
           SQLConn.commit()
         except:
           SQLConn.rollback()
@@ -491,10 +499,11 @@ while 1:
 
     else:
       EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
-      L.debug("Update profile end time to %s and state to 'Completed' for run id %d" % ( EndTime, RunID ) )
-      SQL = "UPDATE Profiles SET end_time='%s', state='Completed' where run_id=%d" % ( EndTime, RunID )
+      L.debug("Update profile end time to %s and state to %s for run id %d" % ( EndTime, 'Completed', RunID ) )
+      sql = 'UPDATE profiles SET end_time=?, state=? WHERE run_id=?;'
+      p = ( EndTime, 'Completed', RunID )
       try:
-        SQLCur.execute(SQL)
+        SQLCur.execute( sql, p )
         SQLConn.commit()
       except:
         SQLConn.rollback()
@@ -506,11 +515,3 @@ while 1:
 
   SQLConn.close()
   time.sleep(2)
-
-#except KeyboardInterrupt:  
-#  print "\nKeyboard interrupt caught. Cleaning up...\n"
-
-#except:  
-#  print "\nOther error or exception occurred! Cleaning up...\n"  
-  
-#finally:  
