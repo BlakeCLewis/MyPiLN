@@ -109,9 +109,10 @@ Stuff to get it to work:
 
 		sudo mkdir /var/www/html/images
 		sudo mkdir /var/www/html/style
-		sudo ln -s /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png
-		sudo ln -s /home/PiLN/images/piln.png    /var/www/html/images/piln.png
-		sudo ln -s /home/PiLN/style/style.css    /var/www/html/style/style.css
+                chown pi:pi /var/www/html/style /var/www/html/images
+		cp /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png
+		cp /home/PiLN/images/piln.png    /var/www/html/images/piln.png
+		cp /home/PiLN/style/style.css    /var/www/html/style/style.css
 	
 - Add the following ScriptAlias and Directory parameters under "IfDefine ENABLE_USR_LIB_CGI_BIN" in /etc/apache2/conf-available/serve-cgi-bin.conf:
 	
@@ -183,17 +184,17 @@ Stuff to get it to work:
 		
 - Tuning: 
 
-       + pvarney's suggestion
-		  Proportional:	6.00
-		  Integral:	0.04
-		  Derivative:	0.00
-          Time internal: 10 seconds
+	+ pvarney's suggestion
+		Proportional:	6.00
+		Integral:	0.04
+		Derivative:	0.00
+		Time internal:	10 seconds
 
-	   +blow dryer test rig
-          Proportional:   6.00
-          Integral:   0.04
-          Derivative: 0.00
-          Time internal: 4 seconds
+	+ blow dryer test rig
+		Proportional:	6.00
+		Integral:	0.04
+		Derivative:	0.00
+		Time internal:	4 seconds
 
 
 Using the Web App:
