@@ -1,11 +1,7 @@
 --
 -- Database: PiLN
 --
--- --------------------------------------------------------
---
--- Table structure for table Profiles
--- ('INTEGER PRIMARY KEY' is aliased to rowid and is autoincremented)
-CREATE TABLE IF NOT EXISTS profiles (
+CREATE TABLE IF NOT EXISTS profiles(
   run_id  INTEGER PRIMARY KEY,
   state   TEXT NOT NULL DEFAULT 'Staged',
   notes   TEXT,
@@ -15,11 +11,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   start_time DATETIME DEFAULT NULL,
   end_time   DATETIME DEFAULT NULL
 );
--- --------------------------------------------------------
---
--- Table structure for table Firing
---
-CREATE TABLE IF NOT EXISTS firing (
+-- ('INTEGER PRIMARY KEY' is aliased to rowid and is autoincremented)
+CREATE TABLE IF NOT EXISTS firing(
   run_id     INT NOT NULL,
   segment    INT NOT NULL DEFAULT 0,
   dt         DATETIME NOT NULL DEFAULT CURRENT_DATATIME,
@@ -27,13 +20,9 @@ CREATE TABLE IF NOT EXISTS firing (
   temp       NUMERIC NOT NULL,
   int_temp   NUMERIC DEFAULT NULL,
   pid_output NUMERIC NOT NULL,
-  PRIMARY KEY(run_id,segment,dt),
+  PRIMARY KEY(run_id,segment,dt)
 );
--- --------------------------------------------------------
---
--- Table structure for table Segments
---
-CREATE TABLE IF NOT EXISTS segments (
+CREATE TABLE IF NOT EXISTS segments(
   run_id   INT NOT NULL,
   segment  INT NOT NULL,
   set_temp INT NOT NULL,
