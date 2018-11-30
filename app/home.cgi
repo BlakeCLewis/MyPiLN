@@ -129,6 +129,11 @@ elif page == "run":
       params = { "run_id": run_id, "state":"Staged", "notes": notes }
     )
   else:
+#    sql = 'INSERT into profiles(state,notes,p_param,i_param,d_param)VALUES(?,(select notes,p_param,i_param,d_param FROM profiles where run_id=?);'
+#    p = ( 'Running', int(run_id) )
+#    run_id = cursor.lastrowid
+#    sql = 'insert into segments run_id,(select );'
+# um look at copy profile
     sql = 'UPDATE profiles SET state=? WHERE run_id=?;'
     p = ( 'Running', int(run_id) )
     cursor.execute( sql, p )
