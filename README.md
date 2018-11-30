@@ -84,122 +84,122 @@ Stuff to get it to work:
 
 - Pin-Out:
 
-	MAX31855+:		3.3v,    Pin 17
-	MAX31855-:		GROUND,  Pin 20
-	MAX31855 CLK:		GPIO 25, Pin 22
-	MAX31855 CS:		GPIO 24, Pin 18
-	MAX31855 DO:		GPIO 18, Pin 12
-	unl2003a 1: 		GPIO 23, Pin 16
-	unl2003a 8:		GROUND,  Pin 25
-	PiOLED: 		3.3v,    Pin 1
-	PiOLED: 		5v,      Pin 2
-	PiOLED: 		GPIO 2,  Pin 3
-	PiOLED: 		5v,      Pin 4
-	PiOLED: 		GPIO 3,  Pin 5
-	PiOLED: 		GND,     Pin 6
+		MAX31855+:		3.3v,    Pin 17
+		MAX31855-:		GROUND,  Pin 20
+		MAX31855 CLK:		GPIO 25, Pin 22
+		MAX31855 CS:		GPIO 24, Pin 18
+		MAX31855 DO:		GPIO 18, Pin 12
+		unl2003a 1: 		GPIO 23, Pin 16
+		unl2003a 8:		GROUND,  Pin 25
+		PiOLED: 		3.3v,    Pin 1
+		PiOLED: 		5v,      Pin 2
+		PiOLED: 		GPIO 2,  Pin 3
+		PiOLED: 		5v,      Pin 4
+		PiOLED: 		GPIO 3,  Pin 5
+		PiOLED: 		GND,     Pin 6
 
 - Install PiLN files in /home and create log directory:
 
-	sudo adduser PiLN
-	su - PiLN
-	git clone git@github.com:BlakeCLewis/MyPiLN.git .
-	mkdir ./log
+		sudo adduser PiLN
+		su - PiLN
+		git clone git@github.com:BlakeCLewis/MyPiLN.git .
+		mkdir ./log
 
 - Install sqlite3:
 
-	sudo apt-get install sqlite3
+		sudo apt-get install sqlite3
 
 - Set up directories/link for web page:
 
-	sudo mkdir /var/www/html/images
-	sudo mkdir /var/www/html/style
-	chown pi:pi /var/www/html/style /var/www/html/images
-	cp /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png
-	cp /home/PiLN/images/piln.png    /var/www/html/images/piln.png
-	cp /home/PiLN/style/style.css    /var/www/html/style/style.css
+		sudo mkdir /var/www/html/images
+		sudo mkdir /var/www/html/style
+		chown pi:pi /var/www/html/style /var/www/html/images
+		cp /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png
+		cp /home/PiLN/images/piln.png    /var/www/html/images/piln.png
+		cp /home/PiLN/style/style.css    /var/www/html/style/style.css
 
 - Add the following ScriptAlias and Directory parameters under "IfDefine ENABLE_USR_LIB_CGI_BIN" in /etc/apache2/conf-available/serve-cgi-bin.conf:
 
-	ScriptAlias /pilnapp/ /home/PiLN/app/
-	<Directory "/home/PiLN/app/">
-		AllowOverride None
-		Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-		Require all granted
-	</Directory>
+		ScriptAlias /pilnapp/ /home/PiLN/app/
+		<Directory "/home/PiLN/app/">
+			AllowOverride None
+			Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+			Require all granted
+		</Directory>
 
 - Create links to enable cgi modules:
 
-	cd /etc/apache2/mods-enabled
-	sudo ln -s ../mods-available/cgid.conf cgid.conf
-	sudo ln -s ../mods-available/cgid.load cgid.load
-	sudo ln -s ../mods-available/cgi.load cgi.load
+		cd /etc/apache2/mods-enabled
+		sudo ln -s ../mods-available/cgid.conf cgid.conf
+		sudo ln -s ../mods-available/cgid.load cgid.load
+		sudo ln -s ../mods-available/cgi.load cgi.load
 
 - Restart Apache:
 
-	sudo systemctl daemon-reload
-	sudo systemctl restart apache2
+		sudo systemctl daemon-reload
+		sudo systemctl restart apache2
 
 - Install required Python packages:
 
-	sudo apt-get update
-	sudo apt-get install build-essential python-dev python-smbus
+		sudo apt-get update
+		sudo apt-get install build-essential python-dev python-smbus
 
 - Install pioled requirements:
 
-	These git clones can be done by a user other than PiLN
+		These git clones can be done by a user other than PiLN
 
-	git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
-	cd ./Adafruit_Python_GPIO/
-	sudo python3 setup.py install
+		git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+		cd ./Adafruit_Python_GPIO/
+		sudo python3 setup.py install
 
-	git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
-	cd ./Adafruit_Python_SSD1306/
-	sudo python3 setup.py install
+		git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
+		cd ./Adafruit_Python_SSD1306/
+		sudo python3 setup.py install
 
-	sudo raspi-config #enable interfaces ic2 & spi
-	lsmod | grep spi
-	
+		sudo raspi-config #enable interfaces ic2 & spi
+		lsmod | grep spi
+
 - Install Adafruit MAX31855 Module:
 
-	cd ~
-	git clone https://github.com/adafruit/Adafruit_Python_MAX31855.git
-	cd Adafruit_Python_MAX31855
-	sudo python setup.py install
+		cd ~
+		git clone https://github.com/adafruit/Adafruit_Python_MAX31855.git
+		cd Adafruit_Python_MAX31855
+		sudo python setup.py install
 
 - Required Python modules (separate installs were not required for these using the latest Raspian build as of July 2017): cgi, jinja2, sys, re, datetime, json, time, logging, RPi.GPIO.
 
 - create the sqlite3 database:
 
-	sudo mkdir -p /var/www/db/PiLN/
-	sudo chown -R PiLN:PiLN /var/www/db
-	sqlite3 /var/www/db/PiLN/PiLN.sqlite3
-	sqlite> .read /home/PiLN/PiLN.sql;
+		sudo mkdir -p /var/www/db/PiLN/
+		sudo chown -R PiLN:PiLN /var/www/db
+		sqlite3 /var/www/db/PiLN/PiLN.sqlite3
+		sqlite> .read /home/PiLN/PiLN.sql;
 
 - (I do not use this yet) To enable automatic startup of the daemon (Had to do the copy/enable/delete/link in order to get systemctl enable to work):
 
-	cp /home/PiLN/daemon/pilnfired.service /etc/systemd/system/
-	sudo systemctl daemon-reload
-	sudo systemctl enable pilnfired
-	sudo rm /etc/systemd/system/pilnfired.service
-	sudo ln -s /home/PiLN/daemon/pilnfired.service /etc/systemd/system/pilnfired.service
-	sudo systemctl daemon-reload
-	sudo systemctl start pilnfired
-	sudo systemctl status pilnfired
+		cp /home/PiLN/daemon/pilnfired.service /etc/systemd/system/
+		sudo systemctl daemon-reload
+		sudo systemctl enable pilnfired
+		sudo rm /etc/systemd/system/pilnfired.service
+		sudo ln -s /home/PiLN/daemon/pilnfired.service /etc/systemd/system/pilnfired.service
+		sudo systemctl daemon-reload
+		sudo systemctl start pilnfired
+		sudo systemctl status pilnfired
 
 - Tuning: 
 
 	+ pvarney's suggestion
-		Proportional:	6.00
-		Integral:	0.04
-		Derivative:	0.00
-		Time internal:	10 seconds
+			Proportional:	6.00
+			Integral:	0.04
+			Derivative:	0.00
+			Time internal:	10 seconds
 
 	+ blow dryer test rig
-		Proportional:	6.00
-		Integral:	0.04
-		Derivative:	0.00
-		Time internal:	4 seconds
+			Proportional:	6.00
+			Integral:	0.04
+			Derivative:	0.00
+			Time internal:	4 seconds
 
 - Using the Web App:
 
-	On the same network that the RPi is connected to, go to http://<RPi_IPAddress>/pilnapp/home.cgi
+		On the same network that the RPi is connected to, go to http://<RPi_IPAddress>/pilnapp/home.cgi
