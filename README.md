@@ -80,13 +80,13 @@ Stuff to get it to work:
 
 - Pin-Out:
 
-		MAX31855+:		3.3v,    Pin 17
-		MAX31855-:		GROUND,  Pin 20
-		MAX31855 CLK:		GPIO 25, Pin 22
-		MAX31855 CS:		GPIO 24, Pin 18
-		MAX31855 DO:		GPIO 18, Pin 12
-		unl2003a 1: 		GPIO 23, Pin 16
-		unl2003a 8:		GROUND,  Pin 25
+		MAX31855 Vin:		3.3v,    Pin 17
+		MAX31855 gnd:		GROUND,  Pin  9
+		MAX31855 DO:		GPIO 17, Pin 11
+		MAX31855 CLK:		GPIO 22, Pin 15
+		MAX31855 CS:		GPIO 27, Pin 13
+		unl2003a 1: 		GPIO 24, Pin 18
+		unl2003a 8:		GROUND,  Pin 12v GRN
 		PiOLED: 		3.3v,    Pin 1
 		PiOLED: 		5v,      Pin 2
 		PiOLED: 		GPIO 2,  Pin 3
