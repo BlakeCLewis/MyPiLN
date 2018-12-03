@@ -19,7 +19,7 @@ from PIL import ImageDraw
 from PIL import ImageFont
 import subprocess
 RST = None # on the PiOLED this pin isnt used
-DC = 23
+DC = 23 ## SDA=2 SCL=3 DC is short for D & C
 SPI_PORT = 0
 SPI_DEVICE = 0
 disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
@@ -299,12 +299,12 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       if Output > 0:
         L.debug("==>Relay On")
-        GPIO.output(HEAT,True) ## Turn on GPIO
+        GPIO.output(HEAT,True)
         time.sleep(CycleOnSec)
 
       if Output < 100:
         L.debug("==>Relay Off")
-        GPIO.output(HEAT,False) ## Turn off GPIO
+        GPIO.output(HEAT,False)
 
       # Write status to file for reporting on web page
       L.debug( "Write status information to status file %s:" % StatFile )
@@ -486,7 +486,7 @@ while 1:
         Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd)
         GPIO.output(HEAT,False) ## Turn off GPIO pin
         #--- end fire segment ---
-        #--- mark segment finished with datatime ---
+        #--- mark segment finished with datetime ---
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
         L.debug("Update run id %d, segment %d end time to %s" % ( RunID, Seg, EndTime ) )
         sql = 'UPDATE segments SET end_time=? WHERE run_id=? AND segment=?;'
