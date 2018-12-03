@@ -53,11 +53,8 @@ StatFile = '/var/www/html/pilnstat.json'
 
 # Set up logging
 LogFile = time.strftime( AppDir + '/log/pilnfired.log' )
-L.basicConfig(
-  filename=LogFile,
-  level=L.DEBUG,
-  format='%(asctime)s %(message)s'
-)
+#comment to disable:
+#L.basicConfig( filename=LogFile, level=L.DEBUG, format='%(asctime)s %(message)s')
 
 # Global Variables
 #LastErr  = 0.0
