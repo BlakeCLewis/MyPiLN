@@ -210,7 +210,7 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       print str(LastTmp)  + 'L'
       print ''
       #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
-      if math.isnan(ReadTmp) or ReadCTmp == 0:
+      if math.isnan(ReadTmp) or ReadCTmp == 0 or ReadCTemp > 1315:
         ReadTmp = LastTmp
 
       if RampTrg == 0:
