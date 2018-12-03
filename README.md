@@ -84,19 +84,18 @@ Stuff to get it to work:
 
 - Pin-Out:
 
-		MAX31855 Vin:		3.3v,    Pin 17
-		MAX31855 gnd:		GROUND,  Pin  9
-		MAX31855 DO:		GPIO 17, Pin 11
-		MAX31855 CLK:		GPIO 22, Pin 15
-		MAX31855 CS:		GPIO 27, Pin 13
-		unl2003a 1: 		GPIO 24, Pin 18
-		unl2003a 8:		GROUND,  Pin 12v GRN
-		PiOLED: 		3.3v,    Pin 1
-		PiOLED: 		5v,      Pin 2
-		PiOLED: 		GPIO 2,  Pin 3
-		PiOLED: 		5v,      Pin 4
-		PiOLED: 		GPIO 3,  Pin 5
-		PiOLED: 		GND,     Pin 6
+		MAX31855+:		3.3v
+		MAX31855-:		GND
+		MAX31855 CLK:		GPIO 21
+		MAX31855 CS:		GPIO 16
+		MAX31855 DO:		GPIO 19
+		unl2003a 1: 		GPIO 22
+		unl2003a 8:		GND
+                PiOLED:                 SDA   2
+                PiOLED:                 SCL   3  
+		PiOLED: 		3.3v
+		PiOLED: 		5v
+		PiOLED: 		GND
 
 - Install PiLN files in /home and create log directory:
 

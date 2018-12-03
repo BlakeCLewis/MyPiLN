@@ -9,9 +9,10 @@ import sys
 import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_MAX31855.MAX31855 as MAX31855
-
+import spidev
 # --- oled setup ---
-import Adafruit_GPIO.SPI as SPI
+#import Adafruit_GPIO.SPI as SPI
+import smbus
 import Adafruit_SSD1306
 from PIL import Image
 from PIL import ImageDraw
@@ -68,24 +69,24 @@ LastTmp  = 0.0
 wheel = '-'
 
 # MAX31855 Pins/Setup
-CS  = 27
-CLK = 22
-DO  = 17
-Sensor = MAX31855.MAX31855(CLK, CS, DO)
+CS  = 16
+CLK = 21
+DO  = 19
+Sensor = MAX31855.MAX31855(CLK,CS,DO)
 
 # Pin setup for relay
-HEAT = 24 ## GPIO Pin 16
-GPIO.setup (HEAT, GPIO.OUT) ## Setup GPIO Pin to OUT
-GPIO.output(HEAT, GPIO.LOW) ## Turn off GPIO
+HEAT = 22
+GPIO.setup (HEAT,GPIO.OUT)
+GPIO.output(HEAT,GPIO.LOW)
 
 def clean(*args):
   print ("\nProgram ending! Cleaning up...\n")
-  GPIO.output(HEAT,False) ## Turn off GPIO pin
-  GPIO.cleanup()       ## this ensures a clean exit
+  GPIO.output(HEAT,False)
+  GPIO.cleanup()
   print ("All clean - Stopping.\n")
   os._exit(0)
 
-for sig in (SIGABRT, SIGINT, SIGTERM):
+for sig in (SIGABRT,SIGINT,SIGTERM):
     signal(sig, clean)
 
 # Celsius to Fahrenheit

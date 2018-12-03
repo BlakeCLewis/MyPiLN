@@ -1,7 +1,8 @@
 # enable I2C and SPI in pi configuration
 import time
 
-import Adafruit_GPIO.SPI as SPI
+#import Adafruit_GPIO.SPI as SPI
+import smbus
 import Adafruit_SSD1306
 
 from PIL import Image
