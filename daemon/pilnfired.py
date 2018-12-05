@@ -10,40 +10,23 @@ import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_MAX31855.MAX31855 as MAX31855
 import spidev
-# --- oled setup ---
-#import Adafruit_GPIO.SPI as SPI
-import smbus
-import Adafruit_SSD1306
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-import subprocess
-RST = None # on the PiOLED this pin isnt used
-DC = 23 ## SDA=2 SCL=3 DC is short for D & C
-SPI_PORT = 0
-SPI_DEVICE = 0
-disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
-disp.begin()
-disp.clear()
-disp.display()
-# Create blank image for drawing.
-width = disp.width
-height = disp.height
-# Make sure to create image with mode '1' for 1-bit color.
-image = Image.new('1', (width, height))
-# Get drawing object to draw on image.
-draw = ImageDraw.Draw(image)
-# Draw a black filled box to clear the image.
-draw.rectangle((0,0,width,height), outline=0, fill=0)
-# Define some constants to allow easy resizing of shapes.
-padding = -2
-top = padding
-bottom = height-padding
-# Move left to right keeping track of the current x position for drawing shapes.
-x = 0
-font = ImageFont.load_default()
+from RPLCD import i2c
+
+# --- RPLCD setup ---
+lcd=i2c.CharLCD(
+  i2c_expander='PCF8574',
+  address=0x27,port=1,
+  cols=20,rows=4,dotsize=8,
+  charmap='A02',
+  auto_linebreaks=True,
+  backlight_enabled=True
+)
+smiley=(0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
+lcd.create_char(0,smiley)
+lcd.create_char(1,[0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000])
+lcd.create_char(2,[0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b00000])
 time.sleep(1)
-# --- end oled setup ---
+# --- RPLCD setup end ---
 
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
 AppDir = '/home/pi/git/MyPiLN'
@@ -53,8 +36,12 @@ StatFile = '/var/www/html/pilnstat.json'
 
 # Set up logging
 LogFile = time.strftime( AppDir + '/log/pilnfired.log' )
+L.basicConfig(
+  filename=LogFile,
 #comment to disable:
-#L.basicConfig( filename=LogFile, level=L.DEBUG, format='%(asctime)s %(message)s')
+#  level=L.DEBUG,
+  format='%(asctime)s %(message)s'
+)
 
 # Global Variables
 #LastErr  = 0.0
@@ -80,6 +67,7 @@ def clean(*args):
   print ("\nProgram ending! Cleaning up...\n")
   GPIO.output(HEAT,False)
   GPIO.cleanup()
+  lcd.close(clear=True)
   print ("All clean - Stopping.\n")
   os._exit(0)
 
@@ -325,18 +313,26 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
         wheel = '|'
       elif wheel == '|':
         wheel = '/'
+     elif wheel == '/':
+       wheel = '\x00'
       else:
         wheel = '-'
 
       #------ display ------
-      disp.clear()
-      draw.rectangle((0,0,width,height), outline=0, fill=0) ##fill display with black
-      draw.text((x,top),   'Profile: '+str(RunID)+'Seg: '+str(Seg)+' '+wheel                 ,font=font,fill=255)
-      draw.text((x,top+8), 'Stat :'   +str(RunState)[0:14]                                   ,font=font,fill=255)
-      draw.text((x,top+16),'Tmp: '    +str(int(ReadTmp))+'\x01 Ramp'+str(int(RampTmp))+'\x01',font=font,fill=255)
-      draw.text((x,top+25),'Trgt: '   +str(int(TargetTmp))+'\x01 Tm'+str(RemainTime)         ,font=font,fill=255)
-      disp.image(image)
-      disp.display()
+      lcd.cursor_pos = (0, 0)
+      lcd.write_string(u'Sta:' +str(RunState)+'       ')
+      lcd.cursor_pos = (1, 0)
+      lcd.write_string(u'Pro:' +str(RunID)+'       ')
+      lcd.cursor_pos = (1, 10)
+      lcd.write_string(u'Seg:' +str(Seg)+' '+wheel+'   ')
+      lcd.cursor_pos = (2, 0)
+      lcd.write_string(u'Tmp:' +str(int(ReadTmp))+'\x01    ')
+      lcd.cursor_pos = (2, 10)
+      lcd.write_string(u'Trg:' +str(int(TargetTmp))+'\x01    ')
+      lcd.cursor_pos = (3, 0)
+      lcd.write_string(u'Ram:' +str(int(RampTmp))+'\x01     ')
+      lcd.cursor_pos = (3, 10)
+      lcd.write_string('T:'   +RemainTime)
       #------ display ------
 
       L.debug("Writing stats to Firing DB table...")
@@ -373,6 +369,7 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 L.info("===START PiLN Firing Daemon===")
 L.info("Polling for 'Running' firing profiles...")
 
+lcd.clear()
 while 1:
   # Get temp
   ReadCTmp  = Sensor.readTempC()
@@ -403,18 +400,15 @@ while 1:
     wheel = '|'
   elif wheel == '|':
     wheel = '/'
+  elif wheel == '/':
+    wheel = '\x00'
   else:
     wheel = '-'
 
   #------ display ------
-  disp.clear()
-  draw.rectangle((0,0,width,height), outline=0, fill=0)
-  draw.text((x, top),  'IDLE '+wheel,                   font=font,fill=255)
-  draw.text((x, top+8),'Temp '+str(int(ReadTmp))+'\x01',font=font,fill=255)
-  draw.text((x, top+16),'',font=font, fill=255)
-  draw.text((x, top+25),'',font=font, fill=255)
-  disp.image(image)
-  disp.display()
+  lcd.write_string( 'IDLE '+wheel+'              ')
+  lcd.cursor_pos = (2, 0)
+  lcd.write_string('Temp '+str(int(ReadTmp))+'\x01          ')
   #------ end display ------
 
   # --- Check for 'Running' firing profile ---
