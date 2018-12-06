@@ -2,7 +2,7 @@ WARNING! Electricity and heat are dangerous! Please be careful and seek professi
 
 Web-based Raspberry Pi Kiln Control Application:
 - forked of pvarney/PiLN
-- switched out LCD for pioled
+- switched out LCD for pioled then again for LCD but with i2c interface (2 pins)
 - switched out MySQL for sqlite3
 - still need to figure out the loging/debug stuff better
 - achieved my goal to run on Rasberry Pi Zero W: 
@@ -29,6 +29,8 @@ Future improvements:
 Hardware:
 - Test rig - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
 - I use a pi with $7 thermocouple (below) on the manual kiln during bisque firing to monitor temps and rates;
+- 20x4 LCD w/ i2c backpack
+	+ $13, (https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
 - MAX31855 thermocouple module
 	+ $17.50, Adafruit (https://www.adafruit.com/product/269);
 - High temperature (2372 F) type K thermocouple

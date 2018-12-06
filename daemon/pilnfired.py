@@ -52,13 +52,13 @@ SegCompStat = 0
 LastTmp  = 0.0
 wheel = '-'
 
-# MAX31855 Pins/Setup
+# MAX31855
 CS  = 16
 CLK = 21
 DO  = 19
 Sensor = MAX31855.MAX31855(CLK,CS,DO)
 
-# Pin setup for relay
+# Relay
 HEAT = 22
 GPIO.setup (HEAT,GPIO.OUT)
 GPIO.output(HEAT,GPIO.LOW)
@@ -190,12 +190,8 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
       ReadTmp   = CtoF(ReadCTmp)
       ReadCITmp = Sensor.readInternalC()
       ReadITmp  = CtoF(ReadCITmp)
-      print str(ReadCTmp) + 'C' 
-      print str(ReadTmp)  + 'F'
-      print str(LastTmp)  + 'L'
-      print ''
       #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
-      if math.isnan(ReadTmp) or ReadCTmp == 0 or ReadCTemp > 1315:
+      if math.isnan(ReadCTmp) or ReadCTmp == 0 or ReadCTmp > 1315:
         ReadTmp = LastTmp
 
       if RampTrg == 0:
@@ -313,7 +309,7 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
         wheel = '|'
       elif wheel == '|':
         wheel = '/'
-     elif wheel == '/':
+      elif wheel == '/':
        wheel = '\x00'
       else:
         wheel = '-'
@@ -406,9 +402,10 @@ while 1:
     wheel = '-'
 
   #------ display ------
-  lcd.write_string( 'IDLE '+wheel+'              ')
-  lcd.cursor_pos = (2, 0)
-  lcd.write_string('Temp '+str(int(ReadTmp))+'\x01          ')
+  lcd.cursor_pos = (0,0)
+  lcd.write_string( 'IDLE: '+wheel+'              ')
+  lcd.cursor_pos = (2,0)
+  lcd.write_string('Tmp: '+str(int(ReadTmp))+'\x01          ')
   #------ end display ------
 
   # --- Check for 'Running' firing profile ---
