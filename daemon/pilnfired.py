@@ -56,7 +56,9 @@ wheel = '-'
 CS  = 16
 CLK = 21
 DO  = 19
-Sensor = MAX31855.MAX31855(CLK,CS,DO)
+SPI_PORT = 1
+SPI_DEVICE = 3
+Sensor = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
 
 # Relay
 HEAT = 22
