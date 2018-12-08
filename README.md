@@ -91,8 +91,8 @@ Stuff to get it to work:
 		MAX31855 DO:		GPIO 19
 		unl2003a 1: 		GPIO 22
 		unl2003a 8:		GND
-		RPLCD:			SDA   2
-		RPLCD:			SCL   3  
+		RPLCD:		SDA   2
+		RPLCD:		SCL   3  
 
 - Install PiLN files in /home and create log directory:
 
