@@ -16,10 +16,8 @@ Future improvements:
 - Kiln Sitter(KS) as a sensor, use an Orton KS bar in KS and wire KS to GPIO;
 - performance watchdog, shutdown when a minimum rate cannot be maintained;
 - abstract thermocouple code to ease changing thermocouple chip
-	+ MAX31856 has 50/60hz filter and a correction table
+	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S
 	+ MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO (zone control);
-	+ S-type
-- abstract display code to ease changing display (LCD, pioled);
 - zone control, thermocouple/section, conrol sections independently);
 - inductive current sensors: monitor electric usage to calculate cost of firing, also as an element fault indicator;
 - record ambient temp in the with the firing profile:
@@ -93,11 +91,8 @@ Stuff to get it to work:
 		MAX31855 DO:		GPIO 19
 		unl2003a 1: 		GPIO 22
 		unl2003a 8:		GND
-                PiOLED:                 SDA   2
-                PiOLED:                 SCL   3  
-		PiOLED: 		3.3v
-		PiOLED: 		5v
-		PiOLED: 		GND
+                RPLCD:                  SDA   2
+                RPLCD :                 SCL   3  
 
 - Install PiLN files in /home and create log directory:
 
@@ -159,6 +154,12 @@ Stuff to get it to work:
 
 		sudo raspi-config #enable interfaces ic2 & spi
 		lsmod | grep spi
+
+                vim /boot/config.txt -- SPI1 can have 3 devices add
+                dtoverlay=spi1-3cs
+- Instal RPLCD for the 20x4 lcd:
+		sudo pip install RPLCD
+		sudo apt install python-smbus
 
 - Install Adafruit MAX31855 Module:
 

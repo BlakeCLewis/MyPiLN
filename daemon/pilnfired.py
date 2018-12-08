@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from signal import *
 import os
@@ -8,9 +8,12 @@ import logging as L
 import sys
 import sqlite3
 import RPi.GPIO as GPIO
+import Adafruit_GPIO
+import Adafruit_GPIO.SPI as SPI
 import Adafruit_MAX31855.MAX31855 as MAX31855
 import spidev
 from RPLCD import i2c
+GPIO.setmode(GPIO.BCM)
 
 # --- RPLCD setup ---
 lcd=i2c.CharLCD(
@@ -53,12 +56,13 @@ LastTmp  = 0.0
 wheel = '-'
 
 # MAX31855
-CS  = 16
-CLK = 21
-DO  = 19
 SPI_PORT = 1
-SPI_DEVICE = 3
-Sensor = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+#SPI_DEVICE0 = 0  #18
+#Sensor0 = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT,SPI_DEVICE0))
+#SPI_DEVICE1 = 1  #17
+#Sensor0 = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT,SPI_DEVICE1))
+SPI_DEVICE2 = 2  #16
+Sensor0 = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT,SPI_DEVICE2))
 
 # Relay
 HEAT = 22
@@ -188,9 +192,9 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       # Get temp
       LastTmp   = ReadTmp
-      ReadCTmp  = Sensor.readTempC()
+      ReadCTmp  = Sensor0.readTempC()
       ReadTmp   = CtoF(ReadCTmp)
-      ReadCITmp = Sensor.readInternalC()
+      ReadCITmp = Sensor0.readInternalC()
       ReadITmp  = CtoF(ReadCITmp)
       #if math.isnan(ReadTmp) or ( abs( ReadTmp - LastTmp ) > ( 2 * Window ) ) or ReadTmp == 0 or ReadTmp > 2400:
       if math.isnan(ReadCTmp) or ReadCTmp == 0 or ReadCTmp > 1315:
@@ -256,15 +260,11 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
         LastErr  = 0.0
         Integral = 0.0
 
-#        if TmpDif < 0:
-#          RunState = 2
-
         L.info( "First pass of firing loop - TargetTmp:%0.2f, StartTmp:%0.2f, RampTmp:%0.2f, TmpDif:%0.2f," %
           ( TargetTmp, StartTmp, RampTmp, TmpDif ))
         L.info( "  RampMin:%0.2f, Steps:%d, StepTmp:%0.2f, Window:%d, StartSec:%d, EndSec:%d" %
           ( RampMin, Steps, StepTmp, Window, StartSec, EndSec ) )
     
-      #Output = Update(RampTmp,ReadTmp,50000,-50000,Window,Kp,Ki,Kd)
       Output = Update(RampTmp,ReadTmp,100,0,Window,Kp,Ki,Kd)
 
       CycleOnSec  = Window * ( Output * 0.01 )
@@ -370,9 +370,9 @@ L.info("Polling for 'Running' firing profiles...")
 lcd.clear()
 while 1:
   # Get temp
-  ReadCTmp  = Sensor.readTempC()
+  ReadCTmp  = Sensor0.readTempC()
   ReadTmp   = CtoF(ReadCTmp)
-  ReadCITmp = Sensor.readInternalC()
+  ReadCITmp = Sensor0.readInternalC()
   ReadITmp  = CtoF(ReadCITmp)
   if math.isnan(ReadTmp):
     ReadTmp = LastTmp
