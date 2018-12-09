@@ -22,7 +22,9 @@ lcd=i2c.CharLCD(
   cols=20,rows=4,dotsize=8,
   charmap='A02',
   auto_linebreaks=True,
-  backlight_enabled=True
+  backlight_enabled=
+True
+
 )
 smiley=(0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
 lcd.create_char(0,smiley)
@@ -31,13 +33,15 @@ lcd.create_char(2,[0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b000
 time.sleep(1)
 # --- RPLCD setup end ---
 
+#--- sqlite3 database setup ---
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
 AppDir = '/home/pi/git/MyPiLN'
+#------------------------------
 
-#Status File
+#--- Status File ---
 StatFile = '/var/www/html/pilnstat.json'
 
-# Set up logging
+#--- Set up logging ---
 LogFile = time.strftime( AppDir + '/log/pilnfired.log' )
 L.basicConfig(
   filename=LogFile,
@@ -46,7 +50,7 @@ L.basicConfig(
   format='%(asctime)s %(message)s'
 )
 
-# Global Variables
+#--- Global Variables ---
 #LastErr  = 0.0
 #Integral = 0.0
 ITerm = 0.0
@@ -55,7 +59,7 @@ SegCompStat = 0
 LastTmp  = 0.0
 wheel = '-'
 
-# MAX31855
+#--- MAX31855 ---
 SPI_PORT = 1
 #SPI_DEVICE0 = 0  #18
 #Sensor0 = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT,SPI_DEVICE0))
@@ -64,14 +68,20 @@ SPI_PORT = 1
 SPI_DEVICE2 = 2  #16
 Sensor0 = MAX31855.MAX31855(spi=SPI.SpiDev(SPI_PORT,SPI_DEVICE2))
 
-# Relay
-HEAT = 22
-GPIO.setup (HEAT,GPIO.OUT)
-GPIO.output(HEAT,GPIO.LOW)
+#--- Relays
+HEAT = (22,23,24)
+for element in HEAT:
+  GPIO.setup (element,GPIO.OUT)
+  GPIO.output(element,GPIO.LOW)
+
+#--- kiln sitter ---
+KS = 27
+GPIO.setup (KS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 def clean(*args):
   print ("\nProgram ending! Cleaning up...\n")
-  GPIO.output(HEAT,False)
+  for element in HEAT:
+    GPIO.output(element,False)
   GPIO.cleanup()
   lcd.close(clear=True)
   print ("All clean - Stopping.\n")
@@ -282,12 +292,14 @@ def Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd):
 
       if Output > 0:
         L.debug("==>Relay On")
-        GPIO.output(HEAT,True)
+          for element in HEAT:
+            GPIO.output(element,True)
         time.sleep(CycleOnSec)
 
       if Output < 100:
         L.debug("==>Relay Off")
-        GPIO.output(HEAT,False)
+          for element in HEAT:
+            GPIO.output(element,False)
 
       # Write status to file for reporting on web page
       L.debug( "Write status information to status file %s:" % StatFile )
@@ -474,7 +486,8 @@ while 1:
 
         #--- fire segment ---
         Fire(RunID,Seg,TargetTmp,Rate,HoldMin,Window,Kp,Ki,Kd)
-        GPIO.output(HEAT,False) ## Turn off GPIO pin
+        for element in HEAT:
+          GPIO.output(element,False) ## Turn off GPIO pin
         #--- end fire segment ---
         #--- mark segment finished with datetime ---
         EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
