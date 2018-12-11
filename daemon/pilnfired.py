@@ -76,6 +76,10 @@ for element in HEAT:
 KS = 27
 GPIO.setup(KS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
+def kilnsitter()
+    state = GPIO.input(KS)
+    return (!state)
+
 
 def clean(*args):
     print("\nProgram ending! Cleaning up...\n")
@@ -169,7 +173,7 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
 
 
 # Loop to run each segment of the firing profile
-def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
+def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
 
     L.info("""Entering Fire function with parameters RunID:%d, Seg:%d,
               TargetTmp:%d, Rate:%d, HoldMin:%d, Window:%d
@@ -177,8 +181,9 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
     )
     global SegCompStat
     global wheel
-
-    HoldSec = HoldMin * 60
+    TargetTmp = TargetTmp1
+    KSTrg = False
+    HoldSec = HoldMin * 60 #HoldSec not used, but (HoldMin*60) is
     RampMin = 0.0
     RampTmp = 0.0
     ReadTmp = 0.0
@@ -197,41 +202,54 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
     
     while RunState != "Stopped"  and  RunState != "Complete":
         if time.time() >= NextSec:
-            Cnt += 1
-            NextSec = time.time() + Window
-            # Get temp
+            Cnt += 1                         # record keeping only
+            NextSec = time.time() + Window   # time at end of window
             LastTmp = ReadTmp
             ReadCTmp = Sensor0.readTempC()
             ReadTmp = CtoF(ReadCTmp)
             ReadCITmp = Sensor0.readInternalC()
             ReadITmp = CtoF(ReadCITmp)
             if math.isnan(ReadCTmp)  or  ReadCTmp == 0  or  ReadCTmp > 1315:
+            # error reading
                 ReadTmp = LastTmp
+
             if RampTrg == 0:
                 RampTmp += StepTmp
-            if TmpDif > 0:
-                # Ramp temp reached target
-                if RampTmp >= TargetTmp  and  RampTrg == 0:
+
+            if TmpDif > 0:  # Rising Segment
+                if kilnsitter() and not KSTrg:
+                    KSTrg == True
+                    TargetTmp = ReadTmp #set TargetTmp to current temp
                     RampTmp = TargetTmp
                     RampTrg = 1
+
+                if RampTmp >= TargetTmp  and  RampTrg == 0:
+                    # RampTmp (window target temp) is 1 cycle away
+                    RampTmp = TargetTmp
+                    # reduce RampTmp to TargetTemp
+                    RampTrg = 1
+                    # set the ramp indicator
                     if ReadTrg == 1:
                         RunState = "Ramp complete/target temp reached"
                     else:
                         RunState = "Ramp complete"
 
-                # Read temp reached target
                 if ((TargetTmp-ReadTmp <= TargetTmp*0.006)
                         or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
+                    # reached TargetTmp or close enough
                     ReadTrg = 1
+                    # set the read indicator
                     EndSec = int(time.time()) + (HoldMin*60)
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
-                    if RampTrg == 1:
+                    if KSTrg:
+                        RunState = "Ramp complete/Kilnsitter triggered"
+                    elif RampTrg == 1:
                         RunState = "Ramp complete/target temp reached"
                     else:
                         RunState = "Target temp reached"
 
-            elif TmpDif < 0:
-                # Ramp temp reached target
+            elif TmpDif < 0: # Falling Segment
+                # Ramp temp dropped to target
                 if RampTmp <= TargetTmp  and  RampTrg == 0:
                     RampTmp = TargetTmp
                     RampTrg = 1
@@ -240,9 +258,9 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
                     else:
                         RunState = "Ramp complete"
 
-                # Read temp reached target
                 if ((ReadTmp-TargetTmp <= TargetTmp*0.006)
                         or (ReadTmp <= TargetTmp)) and ReadTrg == 0:
+                    # Read temp dropped to target or close enough
                     ReadTrg = 1
                     EndSec = int(time.time()) + HoldMin*60
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
@@ -256,13 +274,15 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
                 StartSec = int(time.time())
                 NextSec = StartSec + Window
                 TmpDif = TargetTmp - StartTmp
-                RampMin = abs(TmpDif) * 60 / Rate
-                Steps = RampMin * 60 / Window
-                StepTmp = TmpDif / Steps
+                RampMin = abs(TmpDif) * 60 / Rate # minutes to target at rate
+                Steps = RampMin * 60 / Window     # steps of window size
+                StepTmp = TmpDif / Steps          # degrees / step
+                # estimated end of segment
                 EndSec = StartSec + RampMin*60 + HoldMin*60
-                RampTmp = StartTmp + StepTmp
+                RampTmp = StartTmp + StepTmp      # window target
                 if (TmpDif > 0 and RampTmp > TargetTmp) or (TmpDif < 0 and RampTmp < TargetTmp):
-                    RampTmp = TargetTmp
+                    # Hey we there before we get started!
+                    RampTmp = TargetTmp # set window target to final target
                 LastErr = 0.0
                 Integral = 0.0
                 L.info("""First pass of firing loop - TargetTmp:%0.2f,
@@ -272,7 +292,7 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
                        """ % (TargetTmp, StartTmp, RampTmp, TmpDif, RampMin,
                               Steps, StepTmp, Window, StartSec, EndSec)
                 )
-
+            # run state through pid
             Output = Update(RampTmp, ReadTmp, 100, 0, Window, Kp, Ki, Kd)
 
             CycleOnSec = Window * Output * 0.01
@@ -289,7 +309,7 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
                     """ % (RunID, Seg, Cnt, RunState, ReadTmp, RampTmp,
                            TargetTmp, Output, CycleOnSec, RemainTime)
             )
-
+           
             if Output > 0:
                 L.debug("==>Relay On")
                 for element in HEAT:
@@ -369,8 +389,8 @@ def Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd):
                 L.warn("Profile no longer in running state - exiting firing")
                 SegCompStat = 1 
                 RunState = "Stopped"
-    
             if time.time() > EndSec and ReadTrg == 1:
+                # hold time over and reached target
                 RunState = "Complete"
     
 #            L.debug("""RunState:%s,   TargetTmp:%0.2f, StartTmp:%0.2f,
