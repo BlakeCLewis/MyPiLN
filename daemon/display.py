@@ -17,33 +17,45 @@ class display:
         lcd.create_char(2, backslash) #\x02
         self._wheeley = '-','\x02','|','/','\x00'
         self._wheel = cycle(self._wheeley)
-        self._blanks='                    '
+        self.blanks='                    '
 
-    def writeFire(RunState,RunID,Segment,ReadTmp,TargetTmp,RampTmp,RemainTime):        
+    def writeFire(RunState,RunID,Segment,ReadTmp,TargetTmp,RampTmp,RemainTime):
+
+        line0 = u'Sta:' + str(RunState)
+        line0 += str(blanks[len(line0)-20:])
+
+        line1 = u'Pro:' + str(RunID)
+        line1 += blanks[len(line1)-10:]
+        line1 += 'Seg:' + str(Seg) + ' ' + str(next(self._wheel))
+        line1 += blanks[len(line1)-20:]
+        
+        line2 = u'Tmp:' + str(int(ReadTmp)) + '\x01'
+        line2 += blanks[len(line2)-10:]
+        line2 += 'Trg:' + str(int(TargetTmp)) + '\x01' 
+        line2 += blanks[len(line2)-20:]
+
+        line3 = u'Ram:' + str(int(RampTmp)) + '\x01'
+        line3 += blanks[len(line3)-10:]
+        line3 += 'T:' + RemainTime)
+
         self.cursor_pos = (0, 0)
-        self.write_string(u'Sta:' + str(RunState) + blanks[20-len(RunState)-20:])
+        self.write_string(str(line0))
         self.cursor_pos = (1, 0)
-        self.write_string(u'Pro:' + str(RunID) + blanks[len(RunID)-20:])
-        self.cursor_pos = (1, 10)
-        self.write_string(u'Seg:' + str(Seg) + ' ' + next(self._wheel))
+        self.write_string(str(line1))
         self.cursor_pos = (2, 0)
-        self.write_string(u'Tmp:' + str(int(ReadTmp)) + '\x01' + blanks[len(ReadTmp+' ')-20:])
-        self.cursor_pos = (2, 10)
-        self.write_string(u'Trg:' + str(int(TargetTmp)) + '\x01' )
+        self.write_string(str(line2))
         self.cursor_pos = (3, 0)
-        self.write_string(u'Ram:' + str(int(RampTmp)) + '\x01' + blanks[len(RampTmp+' ')-20:])
-        self.cursor_pos = (3, 10)
-        self.write_string('T:' + RemainTime)
+        self.write_string(str(line3))
 
     def writeIdle():
-        lines[0] = 'IDLE: ' + next(self._wheel)
-        lines[1] = 'Tmp0: ' + str(int(ReadCTmp0)) + '\x01C ' + str(int(ReadCITmp0)) + '\x01C'
-        lines[2] = 'Tmp1: ' + str(int(ReadCTmp1)) + '\x01C ' + str(int(ReadCITmp1)) + '\x01C'
-        lines[3] = 'Tmp2: ' + str(int(ReadCTmp2)) + '\x01C ' + str(int(ReadCITmp2)) + '\x01C'
-        lines[0] += str(blanks[len(lines[0])-20:])
-        lines[2] += str(blanks[len(lines[2])-20:])
-        lines[1] += str(blanks[len(lines[1])-20:])
-        lines[3] += str(blanks[len(lines[3])-20:])
+        line0 = 'IDLE: ' + next(self._wheel)
+        line1 = 'Tmp0: ' + str(int(ReadCTmp0)) + '\x01C ' + str(int(ReadCITmp0)) + '\x01C'
+        line2 = 'Tmp1: ' + str(int(ReadCTmp1)) + '\x01C ' + str(int(ReadCITmp1)) + '\x01C'
+        line3 = 'Tmp2: ' + str(int(ReadCTmp2)) + '\x01C ' + str(int(ReadCITmp2)) + '\x01C'
+        line0 += blanks[len(line0)-20:]
+        line1 += blanks[len(line1)-20:]
+        line2 += blanks[len(line2)-20:]
+        line3 += blanks[len(line3)-20:]
 
         lcd.cursor_pos = (0, 0)
         lcd.write_string(lines[0])
