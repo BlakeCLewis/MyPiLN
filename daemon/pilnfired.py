@@ -210,19 +210,26 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
             ReadCITmp = Sensor0.readInternalC()
             ReadITmp = CtoF(ReadCITmp)
             if math.isnan(ReadCTmp)  or  ReadCTmp == 0  or  ReadCTmp > 1315:
-            # error reading
+                # error reading
                 ReadTmp = LastTmp
 
             if RampTrg == 0:
                 RampTmp += StepTmp
 
             if TmpDif > 0:  # Rising Segment
+# each should be exclussive of others?
                 if kilnsitter() and not KSTrg:
                     KSTrg == True
                     TargetTmp = ReadTmp #set TargetTmp to current temp
                     RampTmp = TargetTmp
-                    RampTrg = 1
-
+                    EndSec = int(time.time()) + HoldMin*60
+                    L.info("kilnsitter trigered - End seconds set to %d" % EndSec)
+                    ReadTrg = RampTrg = 1
+                    if ReadTrg == 1:
+                        RunState = "Target Reached"
+                    else:
+                        RunState = "Ramp complete"
+#why?
                 if RampTmp >= TargetTmp  and  RampTrg == 0:
                     # RampTmp (window target temp) is 1 cycle away
                     RampTmp = TargetTmp
@@ -230,7 +237,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
                     RampTrg = 1
                     # set the ramp indicator
                     if ReadTrg == 1:
-                        RunState = "Ramp complete/target temp reached"
+                        RunState = "Target Reached"
                     else:
                         RunState = "Ramp complete"
 
@@ -241,12 +248,10 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
                     # set the read indicator
                     EndSec = int(time.time()) + (HoldMin*60)
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
-                    if KSTrg:
-                        RunState = "Ramp complete/Kilnsitter triggered"
                     elif RampTrg == 1:
-                        RunState = "Ramp complete/target temp reached"
+                        RunState = "Target Reached"
                     else:
-                        RunState = "Target temp reached"
+                        RunState = "Target Reached"
 
             elif TmpDif < 0: # Falling Segment
                 # Ramp temp dropped to target
@@ -254,7 +259,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
                     RampTmp = TargetTmp
                     RampTrg = 1
                     if ReadTrg == 1:
-                        RunState = "Ramp complete/target temp reached"
+                        RunState = "Target Reached"
                     else:
                         RunState = "Ramp complete"
 
@@ -265,9 +270,9 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
                     EndSec = int(time.time()) + HoldMin*60
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
                     if RampTrg == 1:
-                        RunState = "Ramp complete/target temp reached"
+                        RunState = "Target Reached"
                     else:
-                        RunState = "Target temp reached"
+                        RunState = "Target Reached"
 
             if StartTmp == 0:
                 StartTmp = ReadTmp
@@ -402,7 +407,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
 #                         Steps,         StepTmp,         Window,
 #                          StartSec,      EndSec)
 #            )
-
+# --- end Fire() ---
 
 L.info("===START PiLN Firing Daemon===")
 L.info("Polling for 'Running' firing profiles...")
