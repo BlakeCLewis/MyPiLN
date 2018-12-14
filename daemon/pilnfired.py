@@ -12,27 +12,15 @@ import Adafruit_GPIO
 import Adafruit_GPIO.SPI as SPI
 #import Adafruit_MAX31856.MAX31856 as MAX31856
 import Adafruit_MAX31855.MAX31855 as MAX31855
-import spidev
-from RPLCD import i2c
 GPIO.setmode(GPIO.BCM)
+from display import display
+lcd = display()
 
 AppDir = '/home/pi/git/MyPiLN'
 StatFile = '/var/www/html/pilnstat.json'
 
 #--- sqlite3 db file ---
 SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
-
-# --- RPLCD setup ---
-lcd = i2c.CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
-                  cols=20, rows=4, dotsize=8, charmap='A02',
-                  auto_linebreaks=True, backlight_enabled=True
-)
-smiley = (0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
-lcd.create_char(0, smiley)    #\x00
-degree = (0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000)
-lcd.create_char(1, degree)    #\x01
-backslash = (0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b00000)
-lcd.create_char(2, backslash) #\x02
 
 #--- Set up logging ---
 LogFile = time.strftime(AppDir + '/log/pilnfired.log')
@@ -76,20 +64,18 @@ for element in HEAT:
 KS = 27
 GPIO.setup(KS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-def kilnsitter()
+def kilnsitter():
     state = GPIO.input(KS)
-    return (!state)
-
+    return (not state)
 
 def clean(*args):
     print("\nProgram ending! Cleaning up...\n")
     for element in HEAT:
         GPIO.output(element, False)
     GPIO.cleanup()
-    lcd.close(clear=True)
+    #lcd.close()
     print("All clean - Stopping.\n")
     os._exit(0)
-
 
 for sig in (SIGABRT, SIGINT, SIGTERM):
     signal(sig, clean)
@@ -173,7 +159,7 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
 
 
 # Loop to run each segment of the firing profile
-def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
+def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
 
     L.info("""Entering Fire function with parameters RunID:%d, Seg:%d,
               TargetTmp:%d, Rate:%d, HoldMin:%d, Window:%d
@@ -248,7 +234,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
                     # set the read indicator
                     EndSec = int(time.time()) + (HoldMin*60)
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
-                    elif RampTrg == 1:
+                    if RampTrg == 1:
                         RunState = "Target Reached"
                     else:
                         RunState = "Target Reached"
@@ -343,32 +329,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
             )
             sfile.close()
 
-            if wheel == '-':
-                wheel = '\x02'
-            elif wheel == '\x02':
-                wheel = '|'
-            elif wheel == '|':
-                wheel = '/'
-            elif wheel == '/':
-             wheel = '\x00'
-            else:
-                wheel = '-'
-
-            #------ display ------
-            lcd.cursor_pos = (0, 0)
-            lcd.write_string(u'Sta:' +str(RunState)+'       ')
-            lcd.cursor_pos = (1, 0)
-            lcd.write_string(u'Pro:' +str(RunID)+'       ')
-            lcd.cursor_pos = (1, 10)
-            lcd.write_string(u'Seg:' +str(Seg)+' '+wheel+'   ')
-            lcd.cursor_pos = (2, 0)
-            lcd.write_string(u'Tmp:' +str(int(ReadTmp))+'\x01    ')
-            lcd.cursor_pos = (2, 10)
-            lcd.write_string(u'Trg:' +str(int(TargetTmp))+'\x01    ')
-            lcd.cursor_pos = (3, 0)
-            lcd.write_string(u'Ram:' +str(int(RampTmp))+'\x01     ')
-            lcd.cursor_pos = (3, 10)
-            lcd.write_string('T:' +RemainTime)
+            lcd.writeFire(RunState,RunID,Seg,ReadTmp,TargetTmp,RampTmp,RemainTime)
 
             L.debug("Writing stats to Firing DB table...")
 
@@ -412,7 +373,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=false):
 L.info("===START PiLN Firing Daemon===")
 L.info("Polling for 'Running' firing profiles...")
 
-lcd.clear()
+#lcd.clearir()
 
 
 while 1:
@@ -443,26 +404,7 @@ while 1:
     )
     sfile.close()
 
-    if wheel == '-':
-        wheel = '\x02'
-    elif wheel == '\x02':
-        wheel = '|'
-    elif wheel == '|':
-        wheel = '/'
-    elif wheel == '/':
-        wheel = '\x00'
-    else:
-        wheel = '-'
-
-    #------ display ------
-    lcd.cursor_pos = (0, 0)
-    lcd.write_string('IDLE: ' + wheel + '              ')
-    lcd.cursor_pos = (1, 0)
-    lcd.write_string('Tmp: ' + str(int(ReadCTmp0)) + '\x01C ' + str(int(ReadCITmp0)) + '\x01C    ')
-    lcd.cursor_pos = (2, 0)
-    lcd.write_string('Tmp: ' + str(int(ReadCTmp1)) + '\x01C ' + str(int(ReadCITmp1)) + '\x01C    ')
-    #lcd.cursor_pos = (3, 0)
-    #lcd.write_string('Tmp: ' + str(int(ReadCTmp2)) + '\x01C ' + str(int(ReadCITmp2)) + '\x01C    ')
+    lcd.writeIdle(ReadCTmp0,ReadCITmp0,ReadCTmp1,ReadCITmp1) #,ReadT2,ReadI2)
 
     # --- Check for 'Running' firing profile ---
     SQLConn = sqlite3.connect(SQLDB)

@@ -5,71 +5,68 @@ from itertools import cycle
 
 class display:
     def __init__(self):
-        self = i2c.CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
+        self.display = i2c.CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
                           cols=20, rows=4, dotsize=8, charmap='A02',
                           auto_linebreaks=False, backlight_enabled=True
         )
-        smiley = (0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
-        degree = (0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000)
-        backslash = (0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b00000)
-        lcd.create_char(0, smiley)    #\x00
-        lcd.create_char(1, degree)    #\x01
-        lcd.create_char(2, backslash) #\x02
+        smile=(0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
+        degre=(0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000)
+        bksls=(0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b00000)
+        self.display.create_char(0, smile) #\x00
+        self.display.create_char(1, degre) #\x01
+        self.display.create_char(2, bksls) #\x02
         self._wheeley = '-','\x02','|','/','\x00'
         self._wheel = cycle(self._wheeley)
-        self.blanks='                    '
+        self.blank20 = '                    '
+
+#    def clearir():
+#        self.display.clear()
+
+#    def closeir():
+#        self.display.close(clear=True)
 
     def writeFire(self,State,ID,Seg,ReadT,TargT,RampT,ETR):
-        line0 = 'Sta:' + str(State)
-        line0 += str(self.blanks[len(line0)-20:])
 
-        line1 = u'Pro:' + str(ID)
-        line1 += str(self.blanks[len(line1)-10:])
-        line1 += u'Seg:' + str(Seg) + ' ' + str(next(self._wheel))
-        line1 += str(self.blanks[len(line1)-20:])
+        line0 = str(State) + '                   '
 
-        line2 = u'Tmp:' + str(int(ReadT)) + '\xb0C'
-        line2 += str(self.blanks[len(line2)-10:])
-        line2 += u'Trg:' + str(int(TargT)) + '\xb0C'
-        line2 += str(self.blanks[len(line2)-20:])
+        line1a = 'Pr ' + str(ID) + '      '
+        line1b = 'Sg ' + str(Seg) + ' ' + str(next(self._wheel)) + '   '
+        line1 = line1a[0:11] + line1b[0:9]
 
-        line3 = u'Ram:' + str(int(RampT)) + '\xb0C'
-        line3 += str(self.blanks[len(line3)-10:])
-        line3 += 'T:' + ETR
-        line3 += str(self.blanks[len(line3)-20:])
+        line2a = 'Tm ' + str(int(ReadT)) + '\x01C  '
+        line2b = 'Rp ' + str(int(RampT)) + '\x01  '
+        line2 = line2a[0:11] + line2b[0:10]
 
-        self.cursor_pos = (0, 0)
-        self.write_string(str(line0))
+        line3a = 'Tr ' + str(int(TargT)) + '\x01C   '
+        line3b = ETR
+        line3 = line3a[0:11] + line3b[0:8]
 
-        self.cursor_pos = (1, 0)
-        self.write_string(str(line1))
+        self.display.cursor_pos = (0, 0)
+        self.display.write_string(line0[0:19])
+        self.display.cursor_pos = (1, 0)
+        self.display.write_string(line1[0:19])
+        self.display.cursor_pos = (2, 0)
+        self.display.write_string(line2[0:19])
+        self.display.cursor_pos = (3, 0)
+        self.display.write_string(line3[0:19])
 
-        self.cursor_pos = (2, 0)
-        self.write_string(str(line2))
+    def writeIdle(self,ReadT0,ReadI0,ReadT1,ReadI1): #,ReadT2,ReadI2):
+        line0='IDLE: ' + next(self._wheel)
+        line1='T0 ' + str(int(ReadT0)) + '\x01C  ' + str(int(ReadI0)) + '\x01C'
+        line2='T1 ' + str(int(ReadT1)) + '\x01C  ' + str(int(ReadI1)) + '\x01C'
+        #line3='T2 ' + str(int(ReadT2)) + '\x01C  ' + str(int(ReadI2)) + '\x01C'
 
-        self.cursor_pos = (3, 0)
-        self.write_string(str(line3))
+        line0 += str(self.blank20[len(line0)-19:])
+        line1 += str(self.blank20[len(line1)-19:])
+        line2 += str(self.blank20[len(line2)-19:])
+        #line3 += str(self.blank20[len(line3)-19:])
 
-    def writeIdle(self,ReadT0,ReadI0,ReadT1,ReadI1,ReadT2,ReadI2):
-        line0 = u'IDLE: '+next(self._wheel)
-        line1 = u'Tmp0: '+str(int(ReadT0))+'\xb0C  '+str(int(ReadI0))+'\xb0C'
-        line2 = u'Tmp1: '+str(int(ReadT1))+'\xb0C  '+str(int(ReadI1))+'\xb0C'
-        line3 = u'Tmp2: '+str(int(ReadT2))+'\xb0C  '+str(int(ReadI2))+'\xb0C'
-
-        line0 += str(self.blanks[len(line0)-20:])
-        line1 += str(self.blanks[len(line1)-20:])
-        line2 += str(self.blanks[len(line2)-20:])
-        line3 += str(self.blanks[len(line3)-20:])
-
-        lcd.cursor_pos = (0, 0)
-        lcd.write_string(line0)
-
-        lcd.cursor_pos = (1, 0)
-        lcd.write_string(line1)
-
-        lcd.cursor_pos = (2, 0)
-        lcd.write_string(line2)
-
-        lcd.cursor_pos = (3, 0)
-        lcd.write_string(line3)
+        self.display.cursor_pos = (0, 0)
+        self.display.write_string(line0[0:19])
+        self.display.cursor_pos = (1, 0)
+        self.display.write_string(line1[0:19])
+        self.display.cursor_pos = (2, 0)
+        self.display.write_string(line2[0:19])
+        #self.display.cursor_pos = (3, 0)
+        #self.display.write_string(line3[0:19])
 
