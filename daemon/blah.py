@@ -1,5 +1,5 @@
 from itertools import cycle
-
+import sys
 
 class blah:
     def __init__(self):
@@ -39,6 +39,16 @@ class blah:
         print(str(line2))
         print(str(line3))
 
-duh=blah()
-duh.writeFire('Running',19,2,556,1315,108,'10:00:10')
-duh.writeIdle(1222,20,1225,20,1223,20)
+
+def main(n):
+    duh=blah()
+    for i in range(n):
+        duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
+        print ('')
+    #for i in range(n):
+    #    duh.writeIdle(1222+i*2,20,1225+1*2,20,1223,20)
+    #    print ('')
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        main(int(sys.argv[1]))

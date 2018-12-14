@@ -3,11 +3,11 @@ import spidev
 from RPLCD import i2c
 from itertools import cycle
 
-class display:
+class display:(i2c)
     def __init__(self):
-        self.display = i2c.CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
-                          cols=20, rows=4, dotsize=8, charmap='A02',
-                          auto_linebreaks=False, backlight_enabled=True
+        i2c.CharLCD.__init__(self,i2c_expander='PCF8574', address=0x27, port=1,
+                    cols=20, rows=4, dotsize=8, charmap='A02',
+                    auto_linebreaks=False, backlight_enabled=True
         )
         smile=(0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
         degre=(0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000)
@@ -18,12 +18,6 @@ class display:
         self._wheeley = '-','\x02','|','/','\x00'
         self._wheel = cycle(self._wheeley)
         self.blank20 = '                    '
-
-#    def clearir():
-#        self.display.clear()
-
-#    def closeir():
-#        self.display.close(clear=True)
 
     def writeFire(self,State,ID,Seg,ReadT,TargT,RampT,ETR):
 
@@ -70,3 +64,17 @@ class display:
         #self.display.cursor_pos = (3, 0)
         #self.display.write_string(line3[0:19])
 
+def main(n):
+    duh=display()
+    for i in range(n):
+        duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
+        print ('')
+    #for i in range(n):
+    #    duh.writeIdle(1222+i*2,20,1225+1*2,20,1223,20)
+    #    print ('')
+    sleep(3)
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        main(int(sys.argv[1]))
+#https://www.programiz.com/python-programming/inheritance

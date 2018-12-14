@@ -73,7 +73,7 @@ def clean(*args):
     for element in HEAT:
         GPIO.output(element, False)
     GPIO.cleanup()
-    #lcd.close()
+    lcd.close()
     print("All clean - Stopping.\n")
     os._exit(0)
 
@@ -200,42 +200,46 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 ReadTmp = LastTmp
 
             if RampTrg == 0:
+                # if RampTmp has not yet reached TargetTmp increase RampTmp
                 RampTmp += StepTmp
 
             if TmpDif > 0:  # Rising Segment
-# each should be exclussive of others?
+
+                #---- kilnsitter trigger ----
                 if kilnsitter() and not KSTrg:
+                    # if KS triggered and not been here before
                     KSTrg == True
-                    TargetTmp = ReadTmp #set TargetTmp to current temp
-                    RampTmp = TargetTmp
-                    EndSec = int(time.time()) + HoldMin*60
-                    L.info("kilnsitter trigered - End seconds set to %d" % EndSec)
-                    ReadTrg = RampTrg = 1
-                    if ReadTrg == 1:
-                        RunState = "Target Reached"
-                    else:
-                        RunState = "Ramp complete"
-#why?
-                if RampTmp >= TargetTmp  and  RampTrg == 0:
+                    RampTmp = TargetTmp = ReadTmp
+                    if ReadTrg == 0:
+                        # HoldMin has not been set
+                        EndSec = int(time.time()) + HoldMin*60
+                        # stop RampTrg and ReadTrg checks
+                        ReadTrg = RampTrg = 1
+                    RunState = 'KilnSitter/Hold'
+                    L.info("Kilnsitter Trigered - End seconds set to %d" % EndSec)
+
+                #---- RampTrg ----
+                if RampTrg == 0 and RampTmp >= TargetTmp:
                     # RampTmp (window target temp) is 1 cycle away
+                    # only triggers once during segment
+                    # RampTmp will no longer be incremented
                     RampTmp = TargetTmp
                     # reduce RampTmp to TargetTemp
                     RampTrg = 1
                     # set the ramp indicator
                     if ReadTrg == 1:
-                        RunState = "Target Reached"
+                        RunState = "Ramp/Hold"
                     else:
                         RunState = "Ramp complete"
 
-                if ((TargetTmp-ReadTmp <= TargetTmp*0.006)
-                        or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
-                    # reached TargetTmp or close enough
+                #---- ReadTrg ----
+                if ((TargetTmp-ReadTmp <= TargetTmp*0.006) or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
+                    #
                     ReadTrg = 1
-                    # set the read indicator
-                    EndSec = int(time.time()) + (HoldMin*60)
+                    EndSec = int(time.time()) + HoldMin*60
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
                     if RampTrg == 1:
-                        RunState = "Target Reached"
+                        RunState = "Target/Hold"
                     else:
                         RunState = "Target Reached"
 
@@ -245,7 +249,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                     RampTmp = TargetTmp
                     RampTrg = 1
                     if ReadTrg == 1:
-                        RunState = "Target Reached"
+                        RunState = "Target/Ramp"
                     else:
                         RunState = "Ramp complete"
 
@@ -256,11 +260,12 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                     EndSec = int(time.time()) + HoldMin*60
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
                     if RampTrg == 1:
-                        RunState = "Target Reached"
+                        RunState = "Ramp/Target"
                     else:
                         RunState = "Target Reached"
 
             if StartTmp == 0:
+                # initial setup
                 StartTmp = ReadTmp
                 StartSec = int(time.time())
                 NextSec = StartSec + Window
@@ -355,8 +360,9 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 L.warn("Profile no longer in running state - exiting firing")
                 SegCompStat = 1 
                 RunState = "Stopped"
+
             if time.time() > EndSec and ReadTrg == 1:
-                # hold time over and reached target
+                # hold time is over and reached target
                 RunState = "Complete"
     
 #            L.debug("""RunState:%s,   TargetTmp:%0.2f, StartTmp:%0.2f,
@@ -373,7 +379,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
 L.info("===START PiLN Firing Daemon===")
 L.info("Polling for 'Running' firing profiles...")
 
-#lcd.clearir()
+lcd.clear()
 
 
 while 1:
@@ -527,3 +533,6 @@ while 1:
 
     SQLConn.close()
     time.sleep(2)
+
+
+
