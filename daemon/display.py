@@ -1,67 +1,78 @@
+import sys
 import RPi.GPIO as GPIO
 import spidev
-from RPLCD import i2c
+from RPLCD.i2c import CharLCD
 from itertools import cycle
 
-class display:
+class display(CharLCD):
     def __init__(self):
-        self = i2c.CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
-                          cols=20, rows=4, dotsize=8, charmap='A02',
-                          auto_linebreaks=False, backlight_enabled=True
+        CharLCD.__init__(self,i2c_expander='PCF8574', address=0x27, port=1,
+            cols=20, rows=4, dotsize=8, charmap='A02',
+            auto_linebreaks=False, backlight_enabled=True
         )
-        smiley = (0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
-        degree = (0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000)
-        backslash = (0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b00000)
-        lcd.create_char(0, smiley)    #\x00
-        lcd.create_char(1, degree)    #\x01
-        lcd.create_char(2, backslash) #\x02
+        smile=(0b00000,0b01010,0b01010,0b00000,0b10001,0b10001,0b01110,0b00000)
+        degre=(0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000,0b00000)
+        bksls=(0b00000,0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0b00000)
+        self.create_char(0, smile) #\x00
+        self.create_char(1, degre) #\x01
+        self.create_char(2, bksls) #\x02
         self._wheeley = '-','\x02','|','/','\x00'
         self._wheel = cycle(self._wheeley)
-        self._blanks='                    '
+        self.blank20 = '                    '
 
-    def writeFire(RunState,RunID,Segment,ReadTmp,TargetTmp,RampTmp,RemainTime):        
+    def writeFire(self,State,ID,Seg,ReadT,TargT,RampT,ETR):
+
+        line0 = str(State) + '                   '
+
+        line1a = 'Pr ' + str(ID) + '      '
+        line1b = 'Sg ' + str(Seg) + ' ' + str(next(self._wheel)) + '   '
+        line1 = line1a[0:11] + line1b[0:9]
+
+        line2a = 'Tm ' + str(int(ReadT)) + '\x01C  '
+        line2b = 'Rp ' + str(int(RampT)) + '\x01  '
+        line2 = line2a[0:11] + line2b[0:10]
+
+        line3a = 'Tr ' + str(int(TargT)) + '\x01C   '
+        line3b = ETR
+        line3 = line3a[0:11] + line3b[0:8]
+
         self.cursor_pos = (0, 0)
-        self.write_string(u'Sta:' + str(RunState) + blanks[20-len(RunState)-20:])
+        self.write_string(line0[0:19])
         self.cursor_pos = (1, 0)
-        self.write_string(u'Pro:' + str(RunID) + blanks[len(RunID)-20:])
-        self.cursor_pos = (1, 10)
-        self.write_string(u'Seg:' + str(Seg) + ' ' + next(self._wheel))
+        self.write_string(line1[0:19])
         self.cursor_pos = (2, 0)
-        self.write_string(u'Tmp:' + str(int(ReadTmp)) + '\x01' + blanks[len(ReadTmp+' ')-20:])
-        self.cursor_pos = (2, 10)
-        self.write_string(u'Trg:' + str(int(TargetTmp)) + '\x01' )
+        self.write_string(line2[0:19])
         self.cursor_pos = (3, 0)
-        self.write_string(u'Ram:' + str(int(RampTmp)) + '\x01' + blanks[len(RampTmp+' ')-20:])
-        self.cursor_pos = (3, 10)
-        self.write_string('T:' + RemainTime)
+        self.write_string(line3[0:19])
 
-    def writeIdle():
-        lines[0] = 'IDLE: ' + next(self._wheel)
-        lines[1] = 'Tmp0: ' + str(int(ReadCTmp0)) + '\x01C ' + str(int(ReadCITmp0)) + '\x01C'
-        lines[2] = 'Tmp1: ' + str(int(ReadCTmp1)) + '\x01C ' + str(int(ReadCITmp1)) + '\x01C'
-        lines[3] = 'Tmp2: ' + str(int(ReadCTmp2)) + '\x01C ' + str(int(ReadCITmp2)) + '\x01C'
-        lines[0] += str(blanks[len(lines[0])-20:])
-        lines[2] += str(blanks[len(lines[2])-20:])
-        lines[1] += str(blanks[len(lines[1])-20:])
-        lines[3] += str(blanks[len(lines[3])-20:])
+    def writeIdle(self,ReadT0,ReadI0,ReadT1,ReadI1): #,ReadT2,ReadI2):
+        line0='IDLE: ' + next(self._wheel) + '             '
+        line1='T0 ' + str(int(ReadT0)) + '\x01C  ' + str(int(ReadI0)) + '\x01C     '
+        line2='T1 ' + str(int(ReadT1)) + '\x01C  ' + str(int(ReadI1)) + '\x01C     '
+        #line3='T2 ' + str(int(ReadT2)) + '\x01C  ' + str(int(ReadI2)) + '\x01C     '
 
-        lcd.cursor_pos = (0, 0)
-        lcd.write_string(lines[0])
-        lcd.cursor_pos = (1, 0)
-        lcd.write_string(lines[1])
-        lcd.cursor_pos = (2, 0)
-        lcd.write_string(lines[2])
-        lcd.cursor_pos = (3, 0)
-        lcd.write_string(lines[3])
+        self.cursor_pos = (0, 0)
+        self.write_string(line0[0:19])
+        self.cursor_pos = (1, 0)
+        self.write_string(line1[0:19])
+        self.cursor_pos = (2, 0)
+        self.write_string(line2[0:19])
+        #self.cursor_pos = (3, 0)
+        #self.write_string(line3[0:19])
+"""
+duh=display()
+for i in range(8):
+    duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
+    print ('')
+    sleep(3)
+for i in range(8):
+    duh.writeIdle(1222+i*2,20,1225+1*2,20) #,1223,20)
+    print ('')
+    sleep(3)
+duh.close(clear=True)
 
-from itertools import cycle
-class blake:
-    def __init__(self):
-         self._wheeley = '-','\x02','|','/','\x00'
-         self._wheel = cycle(self._wheeley)
-    def display(self):
-         print(next(self._wheel))
+duh.writeIdle(1222,20,1225,20)
+duh.writeFire('Running',19,2,768,1315,250,'10:00:10')
 
-duh=blake()
-duh.display()
-
+https://www.programiz.com/python-programming/inheritance
+"""
