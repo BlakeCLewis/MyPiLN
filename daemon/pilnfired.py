@@ -12,9 +12,12 @@ import Adafruit_GPIO
 import Adafruit_GPIO.SPI as SPI
 #import Adafruit_MAX31856.MAX31856 as MAX31856
 import Adafruit_MAX31855.MAX31855 as MAX31855
-GPIO.setmode(GPIO.BCM)
 from display import display
+
+# initialize display (hardware i2c in display.py)
 lcd = display()
+
+GPIO.setmode(GPIO.BCM)
 
 AppDir = '/home/pi/git/MyPiLN'
 StatFile = '/var/www/html/pilnstat.json'
@@ -31,17 +34,13 @@ L.basicConfig(filename=LogFile,
 )
 
 #--- Global Variables ---
-#LastErr = 0.0
-#Integral = 0.0
 ITerm = 0.0
 LastProcVal = 0.0
 SegCompStat = 0
 LastTmp = 0.0
-wheel = '-'
 
 #--- MAX31856 only works on SPI0, SPI1 cannot do mode=1 ---
 #Sensor0 = MAX31856.MAX31856(spi = SPI.SpiDev(0, 0)) #SPI0,CE0
-
 #--- MAX31855 ---
 Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
 Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
@@ -53,8 +52,7 @@ Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
 #    elif isinstance(sensor, MAX31855.MAX31855)
 #        return sensor.readTempC()
 
-
-#--- Relays
+#--- Relays ---
 HEAT = (22, 23, 24)
 for element in HEAT:
     GPIO.setup(element, GPIO.OUT)
@@ -63,29 +61,24 @@ for element in HEAT:
 #--- kiln sitter ---
 KS = 27
 GPIO.setup(KS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
 def kilnsitter():
     state = GPIO.input(KS)
     return (not state)
 
+#--- Cleanup ---
 def clean(*args):
     print("\nProgram ending! Cleaning up...\n")
     for element in HEAT:
         GPIO.output(element, False)
     GPIO.cleanup()
-    lcd.close()
+    lcd.close(clear=True)
     print("All clean - Stopping.\n")
     os._exit(0)
 
 for sig in (SIGABRT, SIGINT, SIGTERM):
     signal(sig, clean)
 
-# Celsius to Fahrenheit
-def CtoF(c):
-    return c*1.8 + 32.0
-
 time.sleep(1)
-
 
 # PID Update
 def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
@@ -97,25 +90,18 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     )
 
     global ITerm, LastProcVal
-
     Err = SetPoint - ProcValue
     ITerm += (Ki * Err);
-
     if ITerm > IMax:
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
-
     DInput = ProcValue - LastProcVal
-
-    #Compute PID Output
     Output = Kp*Err + ITerm - Kd*DInput;
     if Output > IMax:
         Output = IMax
     elif Output < IMin:
         Output = IMin
-
-    #Remember for next time
     LastProcVal = ProcValue
 
     L.debug("""Exiting PID update with parameters Error:%0.2f,
@@ -125,40 +111,7 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
 
     return Output
 
-#    global LastErr, Integral
-#
-#    Err = SetPoint - ProcValue
-#
-#    Pterm = Kp * Err
-#
-#    Dterm = Kd * ( Err - LastErr )
-#    LastErr = Err
-#
-#    Integral += Err
-#    if Integral > IMax:
-#        Integral = IMax
-#    elif Integral < IMin:
-#        Integral = IMin
-#    Iterm = Ki * Integral
-#
-#    Output = Pterm + Iterm + Dterm
-#
-#    L.debug("""Exiting PID update with parameters Error:%0.2f,Integral:%0.2f,
-#               Pterm:%0.2f, Iterm:%0.2f, Dterm:%0.2f, Output:%0.2f
-#            """ % (Err, Integral, Pterm, Iterm, Dterm, Output)
-#    )
-#
-#    if Output > 100:
-#        Output = 100
-#    elif Output < 0:
-#        Output = 0
-#    if Output < 0:
-#        Output = 0
-#
-#    return Output
 
-
-# Loop to run each segment of the firing profile
 def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
 
     L.info("""Entering Fire function with parameters RunID:%d, Seg:%d,
@@ -168,8 +121,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
     global SegCompStat
     global wheel
     TargetTmp = TargetTmp1
-    KSTrg = False
-    HoldSec = HoldMin * 60 #HoldSec not used, but (HoldMin*60) is
     RampMin = 0.0
     RampTmp = 0.0
     ReadTmp = 0.0
@@ -185,17 +136,16 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
     Cnt = 0
     RampTrg = 0
     ReadTrg = 0
+    KSTrg = False
     
     while RunState != "Stopped"  and  RunState != "Complete":
         if time.time() >= NextSec:
             Cnt += 1                         # record keeping only
             NextSec = time.time() + Window   # time at end of window
             LastTmp = ReadTmp
-            ReadCTmp = Sensor0.readTempC()
-            ReadTmp = CtoF(ReadCTmp)
-            ReadCITmp = Sensor0.readInternalC()
-            ReadITmp = CtoF(ReadCITmp)
-            if math.isnan(ReadCTmp)  or  ReadCTmp == 0  or  ReadCTmp > 1315:
+            ReadTmp = Sensor0.readTempC()
+            ReadITmp = Sensor0.readInternalC()
+            if math.isnan(ReadTmp)  or  ReadTmp == 0  or  ReadTmp > 1330:
                 # error reading
                 ReadTmp = LastTmp
 
@@ -221,7 +171,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 #---- RampTrg ----
                 if RampTrg == 0 and RampTmp >= TargetTmp:
                     # RampTmp (window target temp) is 1 cycle away
-                    # only triggers once during segment
+                    # only will trigger once per segment
                     # RampTmp will no longer be incremented
                     RampTmp = TargetTmp
                     # reduce RampTmp to TargetTemp
@@ -233,8 +183,8 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                         RunState = "Ramp complete"
 
                 #---- ReadTrg ----
-                if ((TargetTmp-ReadTmp <= TargetTmp*0.006) or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
-                    #
+                if ((TargetTmp-ReadTmp <= TargetTmp*0.006) 
+                    or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
                     ReadTrg = 1
                     EndSec = int(time.time()) + HoldMin*60
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
@@ -276,8 +226,9 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 # estimated end of segment
                 EndSec = StartSec + RampMin*60 + HoldMin*60
                 RampTmp = StartTmp + StepTmp      # window target
-                if (TmpDif > 0 and RampTmp > TargetTmp) or (TmpDif < 0 and RampTmp < TargetTmp):
-                    # Hey we there before we get started!
+                if ((TmpDif > 0 and RampTmp > TargetTmp) 
+                   or (TmpDif < 0 and RampTmp < TargetTmp)):
+                    # Hey we there before we even started!
                     RampTmp = TargetTmp # set window target to final target
                 LastErr = 0.0
                 Integral = 0.0
@@ -290,14 +241,14 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 )
             # run state through pid
             Output = Update(RampTmp, ReadTmp, 100, 0, Window, Kp, Ki, Kd)
-
+            
             CycleOnSec = Window * Output * 0.01
             if CycleOnSec > Window:
                 CycleOnSec = Window
 
             RemainSec = EndSec - int(time.time()) 
             RemMin, RemSec = divmod(RemainSec, 60)
-            RemHr, RemMin  = divmod(RemMin, 60)
+            RemHr, RemMin = divmod(RemMin, 60)
             RemainTime = "%d:%02d:%02d" % (RemHr, RemMin, RemSec)
             L.debug("""RunID %d, Segment %d (loop %d) - RunState:%s,
                        ReadTmp:%0.2f, RampTmp:%0.2f, TargetTmp:%0.2f,
@@ -365,15 +316,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 # hold time is over and reached target
                 RunState = "Complete"
     
-#            L.debug("""RunState:%s,   TargetTmp:%0.2f, StartTmp:%0.2f,
-#                        RampTmp:%0.2f, TmpDif:%0.2f,    RampMin:%0.2f,
-#                         Steps:%d,      StepTmp:%0.2f,   Window:%d,
-#                          StartSec:%d,   EndSec:%d"""
-#                    % (RunState,      TargetTmp,       StartTmp,
-#                        RampTmp,       TmpDif,          RampMin,
-#                         Steps,         StepTmp,         Window,
-#                          StartSec,      EndSec)
-#            )
 # --- end Fire() ---
 
 L.info("===START PiLN Firing Daemon===")
@@ -384,14 +326,12 @@ lcd.clear()
 
 while 1:
     # Get temp
-    ReadCTmp0 = Sensor0.readTempC()
-    ReadCITmp0 = Sensor0.readInternalC()
-    ReadCTmp1 = Sensor1.readTempC()
-    ReadCITmp1 = Sensor1.readInternalC()
-    #ReadCTmp2 = Sensor2.read_temp_c)
-    #ReadCITmp2 = Sensor2.read_internal_temp_c()
-    ReadTmp = CtoF(ReadCTmp0)
-    ReadITmp = CtoF(ReadCITmp0)
+    ReadTmp = Sensor0.readTempC()
+    ReadITmp = Sensor0.readInternalC()
+    ReadTmp1 = Sensor1.readTempC()
+    ReadITmp1 = Sensor1.readInternalC()
+    #ReadTmp2 = Sensor2.read_temp_c)
+    #ReadITmp2 = Sensor2.read_internal_temp_c()
     if math.isnan(ReadTmp):
         ReadTmp = LastTmp
 
@@ -410,7 +350,7 @@ while 1:
     )
     sfile.close()
 
-    lcd.writeIdle(ReadCTmp0,ReadCITmp0,ReadCTmp1,ReadCITmp1) #,ReadT2,ReadI2)
+    lcd.writeIdle(ReadTmp,ReadITmp,ReadTmp1,ReadITmp1) #,ReadT2,ReadI2)
 
     # --- Check for 'Running' firing profile ---
     SQLConn = sqlite3.connect(SQLDB)

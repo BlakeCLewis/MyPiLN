@@ -22,7 +22,7 @@ run_id = form.getfirst( "run_id", "0" )
 notes  = form.getfirst( "notes", "" )
 state  = form.getfirst( "state", "" )
 
-######## view profile ########
+#--- view profile ---#
 if page == "view":
   sql = 'SELECT * FROM profiles WHERE run_id=?;'
   p = ( int(run_id), )
@@ -62,7 +62,7 @@ if page == "view":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## new profile ########
+#--- new profile ---#
 elif page == "new":
   segments = range(1,maxsegs + 1)
 
@@ -74,7 +74,7 @@ elif page == "new":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## editcopy ########
+#--- editcopy ---#
 elif page == "editcopy":
   sql = '''SELECT segment, set_temp, rate, hold_min, int_sec
              FROM segments
@@ -110,7 +110,7 @@ elif page == "editcopy":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## run profile ########
+#--- run profile ---#
 elif page == "run":
   template = env.get_template( "header.html" ) 
   hdr = template.render( title="Run Profile" )
@@ -129,11 +129,6 @@ elif page == "run":
       params = { "run_id": run_id, "state":"Staged", "notes": notes }
     )
   else:
-#    sql = 'INSERT into profiles(state,notes,p_param,i_param,d_param)VALUES(?,(select notes,p_param,i_param,d_param FROM profiles where run_id=?);'
-#    p = ( 'Running', int(run_id) )
-#    run_id = cursor.lastrowid
-#    sql = 'insert into segments run_id,(select );'
-# um look at copy profile
     sql = 'UPDATE profiles SET state=? WHERE run_id=?;'
     p = ( 'Running', int(run_id) )
     cursor.execute( sql, p )
@@ -150,7 +145,7 @@ elif page == "run":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## save or update profile ########
+#--- save or update profile ---#
 elif page == "savenew" or page == "saveupd":
   p_param = form.getfirst( "Kp", 0.000 )
   i_param = form.getfirst( "Ki", 0.000 )
@@ -173,7 +168,7 @@ elif page == "savenew" or page == "saveupd":
     p = ( int(run_id), )
     cursor.execute( sql, p )
 
-  # common for "savenew" and "saveupd"
+  #--- common for "savenew" and "saveupd" ---
   sql = '''INSERT INTO segments
              (run_id, segment, set_temp, rate, hold_min, int_sec)
              VALUES (?,?,?,?,?,?);'''
@@ -208,7 +203,7 @@ elif page == "savenew" or page == "saveupd":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## delete profile confirmation ########
+#--- delete profile confirmation ---#
 elif page == "del_conf":
   sql = '''SELECT segment, set_temp, rate, hold_min, int_sec, start_time, end_time
              FROM segments
@@ -231,7 +226,7 @@ elif page == "del_conf":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## delete profile ########
+#--- delete profile ---#
 elif page == "delete":
   sql1 = 'DELETE FROM firing   WHERE run_id=?;'
   sql2 = 'DELETE FROM segments WHERE run_id=?;'
@@ -255,7 +250,7 @@ elif page == "delete":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## stop ########
+#--- stop ---#
 elif page == "stop":
   sql = 'UPDATE profiles SET state=? WHERE run_id=?;'
   p = ( 'Stopped', int(run_id) )
@@ -275,7 +270,7 @@ elif page == "stop":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## notes_save ########
+#--- notes_save ---#
 elif page == "notes_save":
   sql = 'UPDATE profiles SET notes=? WHERE run_id=?;'
   p = ( notes, int(run_id) )
@@ -295,7 +290,7 @@ elif page == "notes_save":
   ftr = template.render()
   print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
 
-######## home ########
+#--- home ---#
 else:
   sql =  """SELECT state, run_id, notes, lastdate
               FROM (SELECT state, run_id, notes, start_time AS lastdate,
