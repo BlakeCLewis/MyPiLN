@@ -16,6 +16,7 @@ from display import display
 
 # initialize display (hardware i2c in display.py)
 lcd = display()
+lcd.clear()
 
 GPIO.setmode(GPIO.BCM)
 
@@ -53,7 +54,7 @@ Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
 #        return sensor.readTempC()
 
 #--- Relays ---
-HEAT = (22, 23, 24)
+HEAT = (24, 23, 22)
 for element in HEAT:
     GPIO.setup(element, GPIO.OUT)
     GPIO.output(element, GPIO.LOW)
@@ -116,7 +117,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
 
     L.info("""Entering Fire function with parameters RunID:%d, Seg:%d,
               TargetTmp:%d, Rate:%d, HoldMin:%d, Window:%d
-           """ % (RunID, Seg, TargetTmp, Rate, HoldMin, Window)
+           """ % (RunID, Seg, TargetTmp1, Rate, HoldMin, Window)
     )
     global SegCompStat
     global wheel
@@ -323,7 +324,6 @@ L.info("Polling for 'Running' firing profiles...")
 
 lcd.clear()
 
-
 while 1:
     # Get temp
     ReadTmp = Sensor0.readTempC()
@@ -427,7 +427,6 @@ while 1:
 
                 #--- fire segment ---
                 Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd)
-
                 for element in HEAT:
                     GPIO.output(element, False) ## make sure elements are off
 
@@ -447,6 +446,8 @@ while 1:
                 except:
                     SQLConn.rollback()
                     L.error("DB Update failed!")
+
+                lcd.clear()
         # --- end firing loop ---
 
         if SegCompStat == 1:
@@ -473,6 +474,3 @@ while 1:
 
     SQLConn.close()
     time.sleep(2)
-
-
-
