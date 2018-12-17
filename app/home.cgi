@@ -29,7 +29,7 @@ if page == "view":
     cursor.execute(sql, p)
     profile = cursor.fetchone()
 
-    sql = '''SELECT segment, set_temp, rate, hold_min, int_sec, start_time, end_time
+    sql = '''SELECT segment, set_temp, rate, hold_min, int_sec
                FROM segments WHERE run_id=? ORDER BY segment;
           '''
     p = (int(run_id),)
@@ -39,17 +39,10 @@ if page == "view":
     template = env.get_template("header.html") 
     hdr = template.render(title="Profile Details")
     viewtmpl = "view_staged.html"
-    if state == "Completed":
-        viewtmpl = "view_comp.html"
-    elif state == "Running":
-        viewtmpl = "view_run.html"
     template = env.get_template(viewtmpl) 
     bdy = template.render(segments=segments, profile=profile,
           run_id=run_id, state=state, notes=notes
     )
-    if state == "Completed" or state == "Running" or state == "Stopped":
-        template = env.get_template("chart.html") 
-        bdy += template.render(run_id=run_id, notes=notes)
     template = env.get_template("footer.html") 
     ftr = template.render()
     print hdr.encode('utf-8') + bdy.encode('utf-8') + ftr.encode('utf-8')
@@ -69,8 +62,8 @@ elif page == "new":
 #--- editcopy ---#
 elif page == "editcopy":
     sql = '''SELECT segment, set_temp, rate, hold_min, int_sec
-                         FROM segments WHERE run_id=?    ORDER BY segment;
-                '''
+               FROM segments WHERE run_id=? ORDER BY segment;
+          '''
     p = (int(run_id),)
     cursor.execute(sql, p)
     segments = cursor.fetchall()
@@ -224,7 +217,7 @@ elif page == "delete":
 
 #--- stop ---#
 elif page == "stop":
-    sql = 'UPDATE profiles SET state=? WHERE run_id=?;'
+    sql = 'UPDATE fire_profiles SET state=? WHERE run_id=?;'
     p = ('Stopped', int(run_id))
     cursor.execute(sql, p)
     db.commit()
