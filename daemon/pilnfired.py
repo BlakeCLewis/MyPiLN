@@ -64,7 +64,7 @@ KS = 27
 GPIO.setup(KS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 def kilnsitter():
     state = GPIO.input(KS)
-    return (not state)
+    return (state)
 
 #--- Cleanup ---
 def clean(*args):
@@ -157,7 +157,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
             if TmpDif > 0:  # Rising Segment
 
                 #---- kilnsitter trigger ----
-                if kilnsitter() and not KSTrg:
+                if not kilnsitter() and not KSTrg:
                     # if KS triggered and not been here before
                     KSTrg == True
                     RampTmp = TargetTmp = ReadTmp
@@ -323,6 +323,9 @@ L.info("===START PiLN Firing Daemon===")
 L.info("Polling for 'Running' firing profiles...")
 
 lcd.clear()
+SQLConn = sqlite3.connect(SQLDB)
+SQLConn.row_factory = sqlite3.Row
+SQLCur = SQLConn.cursor()
 
 while 1:
     # Get temp
@@ -352,115 +355,25 @@ while 1:
 
     lcd.writeIdle(ReadTmp,ReadITmp,ReadTmp1,ReadITmp1) #,ReadT2,ReadI2)
 
-    # --- Check for 'Running' firing profile ---
-    SQLConn = sqlite3.connect(SQLDB)
-    SQLConn.row_factory = sqlite3.Row
-    SQLCur = SQLConn.cursor()
-    sql = "SELECT * FROM profiles WHERE state=?;"
-    p = ('Running',)
-    SQLCur.execute(sql, p)
-    Data = SQLCur.fetchall()
-    #--- if Running profile found, then set up to fire --
-    if len(Data) > 0:
-        RunID = Data[0]['run_id']
-        Kp = float(Data[0]['p_param'])
-        Ki = float(Data[0]['i_param'])
-        Kd = float(Data[0]['d_param'])
-        L.info("Run ID %d is active - starting firing profile" % RunID)
-
-        StTime = time.strftime('%Y-%m-%d %H:%M:%S')
-        L.debug("Update profile %d start time to %s" % (RunID, StTime))
-
-        sql = "UPDATE profiles SET start_time=? WHERE run_id=?;"
-        p = (StTime, RunID)
-        try:
-            SQLCur.execute(sql, p)
-            SQLConn.commit()
-        except:
-            SQLConn.rollback()
-            L.error("DB Update failed!")
-
-        # Get segments
-        L.info("Get segments for run ID %d" % RunID)
-
-        sql = "SELECT * FROM segments WHERE run_id=?;"
-        p = (RunID,)
+    if kilnsitter(): #if kilnsitter is armed
+        # --- Check for 'Running' firing profile ---
+        sql = "SELECT * FROM profiles WHERE state=?;"
+        p = ('Running',)
         SQLCur.execute(sql, p)
-        ProfSegs = SQLCur.fetchall()
+        Data = SQLCur.fetchall()
+        #--- if Running profile found, then set up to fire, woowo! --
+        if len(Data) > 0:
+            RunID = Data[0]['run_id']
+            Kp = float(Data[0]['p_param'])
+            Ki = float(Data[0]['i_param'])
+            Kd = float(Data[0]['d_param'])
+            L.info("Run ID %d is active - starting firing profile" % RunID)
 
-        # --- begin firing loop ---
-        for Row in ProfSegs:
-            RunID = Row['run_id']
-            Seg = Row['segment']
-            TargetTmp = Row['set_temp']
-            Rate = Row['rate']
-            HoldMin = Row['hold_min']
-            Window = Row['int_sec']
+            StTime = time.strftime('%Y-%m-%d %H:%M:%S')
+            L.debug("Update profile %d start time to %s" % (RunID, StTime))
 
-            if SegCompStat == 1:
-                L.debug("Profile stopped - skipping segment %d" % Seg)
-            else:
-                L.info("""Run ID %d, segment %d parameters:
-                          Target Temp: %0.2f, Rate: %0.2f,
-                          Hold Minutes: %d, Window Seconds: %d
-                       """ % (RunID, Seg, TargetTmp, Rate, HoldMin, Window)
-                )
-                StTime = time.strftime('%Y-%m-%d %H:%M:%S')
-                L.debug("""Update segments set run id %d,
-                           segment %d start time to %s
-                        """ % (RunID, Seg, StTime)
-                )
-
-                #--- mark started segment with datatime ---
-                sql = """UPDATE segments SET start_time=?
-                         WHERE run_id=? AND segment=?;
-                      """
-                p = (StTime, RunID, Seg)
-                try:
-                    SQLCur.execute(sql, p)
-                    SQLConn.commit()
-                except:
-                    SQLConn.rollback()
-                    L.error("DB Update failed!")
-
-                time.sleep(0.5)
-
-                #--- fire segment ---
-                Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd)
-                for element in HEAT:
-                    GPIO.output(element, False) ## make sure elements are off
-
-                EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
-                L.debug("Update run id %d, segment %d end time to %s"
-                        % (RunID, Seg, EndTime)
-                )
-
-                #--- mark segment finished with datetime ---
-                sql = """UPDATE segments SET end_time=?
-                        WHERE run_id=? AND segment=?;
-                      """
-                p = (EndTime, RunID, Seg)
-                try:
-                    SQLCur.execute(sql, p)
-                    SQLConn.commit()
-                except:
-                    SQLConn.rollback()
-                    L.error("DB Update failed!")
-
-                lcd.clear()
-        # --- end firing loop ---
-
-        if SegCompStat == 1:
-            L.info("Profile stopped - Not updating profile end time")
-        else:
-            EndTime = time.strftime('%Y-%m-%d %H:%M:%S')
-            L.debug("""Update profile end time to %s
-                       and state to %s for run id %d
-                    """ % (EndTime, 'Completed', RunID)
-            )
-
-            sql = "UPDATE profiles SET end_time=?, state=? WHERE run_id=?;"
-            p = (EndTime, 'Completed', RunID)
+            sql = "UPDATE profiles SET start_time=? WHERE run_id=?;"
+            p = (StTime, RunID)
             try:
                 SQLCur.execute(sql, p)
                 SQLConn.commit()
@@ -468,9 +381,97 @@ while 1:
                 SQLConn.rollback()
                 L.error("DB Update failed!")
 
-        SegCompStat = 0
+            # Get segments
+            L.info("Get segments for run ID %d" % RunID)
 
-        L.info("Polling for 'Running' firing profiles...")
+            sql = "SELECT * FROM segments WHERE run_id=?;"
+            p = (RunID,)
+            SQLCur.execute(sql, p)
+            ProfSegs = SQLCur.fetchall()
 
-    SQLConn.close()
+            # --- begin firing loop ---
+            for Row in ProfSegs:
+                RunID = Row['run_id']
+                Seg = Row['segment']
+                TargetTmp = Row['set_temp']
+                Rate = Row['rate']
+                HoldMin = Row['hold_min']
+                Window = Row['int_sec']
+
+                if SegCompStat == 1:
+                    L.debug("Profile stopped - skipping segment %d" % Seg)
+                else:
+                    L.info("""Run ID %d, segment %d parameters:
+                              Target Temp: %0.2f, Rate: %0.2f,
+                              Hold Minutes: %d, Window Seconds: %d
+                           """ % (RunID, Seg, TargetTmp, Rate, HoldMin, Window)
+                    )
+                    StTime = time.strftime('%Y-%m-%d %H:%M:%S')
+                    L.debug("""Update segments set run id %d,
+                               segment %d start time to %s
+                            """ % (RunID, Seg, StTime)
+                    )
+
+                    #--- mark started segment with datatime ---
+                    sql = """UPDATE segments SET start_time=?
+                             WHERE run_id=? AND segment=?;
+                          """
+                    p = (StTime, RunID, Seg)
+                    try:
+                        SQLCur.execute(sql, p)
+                        SQLConn.commit()
+                    except:
+                        SQLConn.rollback()
+                        L.error("DB Update failed!")
+
+                    time.sleep(0.5)
+
+                    #--- fire segment ---
+                    Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd)
+                    for element in HEAT:
+                        GPIO.output(element, False) ## make sure elements are off
+
+                    EndTime=time.strftime('%Y-%m-%d %H:%M:%S')
+                    L.debug("Update run id %d, segment %d end time to %s"
+                            % (RunID, Seg, EndTime)
+                    )
+
+                    #--- mark segment finished with datetime ---
+                    sql = """UPDATE segments SET end_time=?
+                            WHERE run_id=? AND segment=?;
+                          """
+                    p = (EndTime, RunID, Seg)
+                    try:
+                        SQLCur.execute(sql, p)
+                        SQLConn.commit()
+                    except:
+                        SQLConn.rollback()
+                        L.error("DB Update failed!")
+
+                    lcd.clear()
+            # --- end firing loop ---
+
+            if SegCompStat == 1:
+                L.info("Profile stopped - Not updating profile end time")
+            else:
+                EndTime = time.strftime('%Y-%m-%d %H:%M:%S')
+                L.debug("""Update profile end time to %s
+                           and state to %s for run id %d
+                        """ % (EndTime, 'Completed', RunID)
+                )
+
+                sql = "UPDATE profiles SET end_time=?, state=? WHERE run_id=?;"
+                p = (EndTime, 'Completed', RunID)
+                try:
+                    SQLCur.execute(sql, p)
+                    SQLConn.commit()
+                except:
+                    SQLConn.rollback()
+                    L.error("DB Update failed!")
+
+            SegCompStat = 0
+
+            L.info("Polling for 'Running' firing profiles...")
     time.sleep(2)
+
+SQLConn.close()
