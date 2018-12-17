@@ -11,11 +11,10 @@ CREATE TABLE IF NOT EXISTS profiles(
   start_time DATETIME DEFAULT NULL,
   end_time   DATETIME DEFAULT NULL
 );
--- ('INTEGER PRIMARY KEY' is aliased to rowid and is autoincremented)
 CREATE TABLE IF NOT EXISTS firing(
   run_id     INT NOT NULL,
   segment    INT NOT NULL DEFAULT 0,
-  dt         DATETIME NOT NULL DEFAULT CURRENT_DATATIME,
+  dt         DATETIME NOT NULL DEFAULT CURRENT_DATETIME,
   set_temp   NUMERIC NOT NULL,
   temp       NUMERIC NOT NULL,
   int_temp   NUMERIC DEFAULT NULL,
