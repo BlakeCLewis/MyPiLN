@@ -60,15 +60,17 @@ class display(CharLCD):
         #self.cursor_pos = (3, 0)
         #self.write_string(line3[0:19])
 """
+import time
+from display import display
 duh=display()
 for i in range(8):
     duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
     print ('')
-    sleep(3)
+    time.sleep(3)
 for i in range(8):
     duh.writeIdle(1222+i*2,20,1225+1*2,20) #,1223,20)
     print ('')
-    sleep(3)
+    time.sleep(3)
 duh.close(clear=True)
 
 duh.writeIdle(1222,20,1225,20)

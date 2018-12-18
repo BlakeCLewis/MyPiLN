@@ -11,30 +11,36 @@ Web-based Raspberry Pi Kiln Control Application:
 	+ 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
 	+ or 'startx konqueror', then shft-ctrl-F to go full screen
 - kiln sitter(KS) as a sensor
-    + KS functions as 'ARMED', can not start firing without kilnsitter being armed
-    + mode 1: set top temp higher than KS cone, thermocouple temp is shutoff trigger
-    + mode 2: set top temp lower than KS cone, ks cone is shutoff trigger
+	+ KS functions as 'ARMED', can not start firing without kilnsitter being armed
+	+ mode 1: set top temp higher than KS cone, thermocouple temp is shutoff trigger
+	+ mode 2: set top temp lower than KS cone, ks cone is shutoff trigger
 - display class:
-    + removes display code from main script
-    + make it easier to change display hardware
+	+ removes display code from main script
+	+ make it easier to change display hardware
 
 Future improvements:
+- basic authentication
 - thermocouple class:
-    + to ease changing thermocouple chip,
-    + MAX31855 current harware,
+	+ to ease changing thermocouple chip,
+	+ MAX31855 current harware,
 	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S,
 	+ MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO;
 - performance watchdog:
-    + shutdown when a minimum rate cannot be maintained,
-    + notify with options(continue, abort firing, abort segment);
+	+ shutdown when a minimum rate cannot be maintained,
+	+ notify with options(continue, abort firing, abort segment);
 - inductive current sensors: monitor electric usage to calculate cost of firing, also as an element fault indicator;
-- zone control: thermocouple/section, conrol sections independently;
 - record ambient temp with firing data:
 - crash/loss of power recovery:
-    + PI comes up, KS is armed & profile is 'Running' then consider unfinished segment
-    + compare last timestamp of 'Running' firing to current time
-    + compare temp at the timestamp to current temp
-    + notify (email)
+	+ PI comes up, KS is armed & profile is 'Running' then consider unfinished segment
+	+ compare last timestamp of 'Running' firing to current time
+	+ compare temp at the timestamp to current temp
+	+ notify (email)
+- test page
+	+ turn on all elements and compare ampres to baseline
+	+ turn on elements individually
+	+ read/display all thermocouples
+	+ prompt to arm/disarm KS
+- zone control: thermocouple/section, conrol sections independently;
 
 Hardware:
 - test rig1 - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
@@ -47,16 +53,17 @@ Hardware:
 - High temperature (2372 F) type K thermocouple
 	+ $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
 - 6 pack of thermocouples
-	+ bought for the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
+	+ bought for the thermocouple wire, 3 meters each
+	+ 'https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1';
 - 1 - uln2003a darlington transitor array to switch 12V coil on the relays
 	+ $1/each on amazon (also used for stepper motors), can switch 7 channels;
 - 3 - Deltrol  20852-81 relays
 	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT)
-	+ $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
+	+ $17.50 each and about that much shipping for 3 (https://www.galco.com/buy/Deltrol-Controls/20852-81);
 - 12V power supply
 	+ converts 120vac to 12vdc,
 	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1),
-    + might be over kill, but rail mounted and runs the coils on the relay, the hdmi lcd power, and also the 5V converter for the PI;
+	+ might be over kill, but rail mounted and runs the coils on the relay, the hdmi lcd power, and also the 5V converter for the PI;
 - 5V buck converter
 	+ converts 12v to 5v USB out for Pi power,
 	+ $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
@@ -125,8 +132,8 @@ Stuff to get it to work:
 		sudo mkdir /var/www/html/style
 		chown pi:pi /var/www/html/style /var/www/html/images
 		cp /home/PiLN/images/hdrback.png /var/www/html/images/hdrback.png
-		cp /home/PiLN/images/piln.png    /var/www/html/images/piln.png
-		cp /home/PiLN/style/style.css    /var/www/html/style/style.css
+		cp /home/PiLN/images/piln.png	/var/www/html/images/piln.png
+		cp /home/PiLN/style/style.css	/var/www/html/style/style.css
 
 - Add the following ScriptAlias and Directory parameters under "IfDefine ENABLE_USR_LIB_CGI_BIN" in /etc/apache2/conf-available/serve-cgi-bin.conf:
 
