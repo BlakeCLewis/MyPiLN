@@ -19,10 +19,10 @@ Content-type:text/html
               } else {
                 if ( data1.run_profile === 'none' ) {
                   $('#statusupd1').html('Firing Process Daemon: IDLE' );
-                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg; F' );
+                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg; C' );
                 } else {
                   $('#statusupd1').html('Firing Process Daemon: ACTIVE with Run ID ' + data1.run_profile + ', Segment ' + data1.run_segment + ', Status: ' + data1.status );
-                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg; F, Ramp Temp: ' + data1.ramptemp + '&deg; F, Target Temp: ' + data1.targettemp + '&deg; F, Segment Time Remaining: ' + data1.segtime );
+                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg; C, Ramp Temp: ' + data1.ramptemp + '&deg; C, Target Temp: ' + data1.targettemp + '&deg; C, Segment Time Remaining: ' + data1.segtime );
                 }
               }
           });
