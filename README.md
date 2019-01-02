@@ -2,82 +2,95 @@ WARNING! Electricity and heat are dangerous! Please be careful and seek professi
 
 Web-based Raspberry Pi Kiln Control Application:
 - forked of pvarney/PiLN
-- switched out LCD for pioled then again for LCD but with i2c interface (2 pins)
-- switched out MySQL for sqlite3
+- switched out LCD for pioled, then again for RPLCD, but with i2c interface(2 GPIO pins)
+- switched out MySQL for sqlite3(low resource consumption)
 - still need to figure out the loging/debug stuff better
 - achieved my goal to run on Rasberry Pi Zero W: 
 	+ sqlite3 instead of MySQL
-	+ lighttpd instead of apache2
+	+ lighttpd instead of apache2 (apache memory was 1/2 pi memory, lighttpd does not show up in top)
 	+ 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
 	+ or 'startx konqueror', then shft-ctrl-F to go full screen
+- kiln sitter(KS) as a sensor
+    + KS functions as 'ARMED', can not start firing without kilnsitter being armed
+    + mode 1: set top temp higher than KS cone, thermocouple temp is shutoff trigger
+    + mode 2: set top temp lower than KS cone, ks cone is shutoff trigger
+- display class:
+    + removes display code from main script
+    + make it easier to change display hardware
 
 Future improvements:
-- overheat shutdown
-- Kiln Sitter(KS) as a sensor, use an Orton KS bar in KS and wire KS to GPIO;
-- performance watchdog, shutdown when a minimum rate cannot be maintained;
-- abstract thermocouple code to ease changing thermocouple chip
-	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S
-	+ MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO (zone control);
-- zone control, thermocouple/section, conrol sections independently);
+- wrap pioled into display class
+- thermocouple class:
+    + to ease changing thermocouple chip,
+    + MAX31855 current harware,
+	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S,
+	+ MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO;
+- performance watchdog:
+    + shutdown when a minimum rate cannot be maintained,
+    + notify with options(continue, abort firing, abort segment);
 - inductive current sensors: monitor electric usage to calculate cost of firing, also as an element fault indicator;
-- record ambient temp in the with the firing profile:
-- congifuration file to set up all the paths, pins and choose hardware;
-- crash/loss of power recovery;
+- zone control: thermocouple/section, conrol sections independently;
+- record ambient temp with firing data:
+- crash/loss of power recovery:
+    + PI comes up, KS is armed & profile is 'Running' then consider unfinished segment
+    + compare last timestamp of 'Running' firing to current time
+    + compare temp at the timestamp to current temp
+    + notify (email)
 
 Hardware:
-- Test rig - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
-- I use a pi with $7 thermocouple (below) on the manual kiln during bisque firing to monitor temps and rates;
+- test rig1 - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
+- test rig2 - $10 Raspberry Pi zero w, $20 relay, $7 ceramic k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
+- I have use a pi with $7 thermocouple (below) on the manual kiln during bisque firing to monitor temps and rates;
 - 20x4 LCD w/ i2c backpack
-	+ $13, (https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+	+ $13, (https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1) uses RPLCD library
 - MAX31855 thermocouple module
 	+ $17.50, Adafruit (https://www.adafruit.com/product/269);
 - High temperature (2372 F) type K thermocouple
 	+ $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
 - 6 pack of thermocouples
 	+ bought for the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
-- 3 LEDs for 'relay on' indicator and resistors for LEDs;
 - 1 - uln2003a darlington transitor array to switch 12V coil on the relays
-	+ untested, switch 12V on relay, using GPIO
 	+ $1/each on amazon (also used for stepper motors), can switch 7 channels;
 - 3 - Deltrol  20852-81 relays
-	+ This is equivelent to relay Skutt uses to switch sections/zones
+	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT)
 	+ $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
 - 12V power supply
-	+ converts 120vac to 12vdc
-	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1);
+	+ converts 120vac to 12vdc,
+	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1),
+    + might be over kill, but rail mounted and runs the coils on the relay, the hdmi lcd power, and also the 5V converter for the PI;
 - 5V buck converter
-	+ converts 12v to 5v USB out for Pi power
+	+ converts 12v to 5v USB out for Pi power,
 	+ $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
 - LCD screen and driver board, (most any hdmi monitor will work) ~$30;
-- Terminal blocks to distribute L1, L2, N and GND
+- terminal blocks to distribute L1, L2, N and GND
 	+ Ground, $6 (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
 	+ L1,L2,Neutral, 3 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
-- Wired 2 lengths of  #10 awg to each section, all wires on the Kiln are Hi Temp Appliance wire;
-- Crimp terminals, #10 awg, Hi Temp Appliance
-	+~$.16/each, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
+- wired 2 lengths of  #10 awg to each section, all wires on the Kiln are Hi Temp Appliance wire;
+- crimp terminals, #10 awg, Hi Temp Appliance
+	+ $.16/each, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
 	+ uses the same crimper used on the elements $16, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
 	+ the crimpers take muscle
-- Crimp lugs #6 AWG copper
+- crimp lugs #6 AWG copper
 	+ $9 for 10 (https://www.amazon.com/gp/product/B073Y8Q9JQ/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
--  Big crimper
+- big crimper
 	+ $25, (https://www.amazon.com/gp/product/B07D7Q54N2/ref=oh_aui_detailpage_o01_s03?ie=UTF8&psc=1)
 	+ I crimp 2 times, first time with correct size, second time reduced one notch(correct size is loose);
-- Din rail mounts
+- din rail mounts
 	+ $17/5 pair(https://www.amazon.com/gp/product/B01H1H86UU/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1);
-- Din rails
+- din rails
 	+ $5/each (https://www.amazon.com/gp/product/B01FT485S0/ref=oh_aui_detailpage_o02_s01?ie=UTF8&psc=1);
 - 14 THHN stranded, hardware store, to power 12V supply, white,red,greem 2' each
-- Heat shrink, Harbor Frieght
+- heat shrink, Harbor Freight
 - #10 32tpi tap and #21 jobber drill bit
-	+ I have lots of 10-32 screws from rack mount hardware extras(data center)
-	+ tap a hole screw in a screw and use the $10 Harbor Frieght angle grinder to flush it up on the back of the box.
+	+ I have lots of 10-32 screws from rack mount hardware extras(
+	+ tap a hole screw in a screw and use the $10 Harbor Freight angle grinder to flush it up on the back of the box.
 
 Thermocouple tip: One side of both the thermocouple and special wire is magnetic (red side), Test with magnet to wire correctly. 
 
 I built a kiln shed and I am about ready to put the controller on a kiln:
-- #0 Jen-Ken, w/ kiln sitter, 2 ring, 10 brick 22" inside height, 06 bisques labors the last 100;
-- #2 KS1027 needs elements and lid repair;
-- #1 KS1027  Skutt, converted to gas, hit 1976F with one burner. (adding burner, 100lb LP tank, tweaking down draft).
+- #0 Jen-Ken, very good shape, kiln sitter(timer does not work), 2 ring, 10 brick 22" inside height, 06 bisques labors the last 100;
+- #2 KS1027 new elements, lid repair, base repair, rust removal on controller boxes, painted, built steel rolling stand;
+- #1 KS1027 Skutt, converted to gas, hit 1976F with one burner. (adding burner, 100lb LP tank, tweaking down draft), built steel rolling stand.
 
 
 Stuff to get it to work:
@@ -86,13 +99,18 @@ Stuff to get it to work:
 
 		MAX31855+:		3.3v
 		MAX31855-:		GND
-		MAX31855 CLK:		GPIO 21
-		MAX31855 CS:		GPIO 16
-		MAX31855 DO:		GPIO 19
-		unl2003a 1: 		GPIO 22
+		MAX31855 CS:		GPIO 8
+		MAX31855 DO:		GPIO 9
+		MAX31855 CLK:		GPIO 11
+		unl2003a 1:			GPIO 22
+		unl2003a 3:			GPIO 23
+		unl2003a 5:			GPIO 24
 		unl2003a 8:		GND
-		RPLCD:		SDA   2
-		RPLCD:		SCL   3  
+		unl2003a 9:		12V
+		RPLCD:		SDA	2
+		RPLCD:		SCL	3
+		RPLCD:		5V
+		RPLCD:		GND
 
 - Install PiLN files in /home and create log directory:
 
@@ -114,6 +132,7 @@ Stuff to get it to work:
 		cp /home/PiLN/images/piln.png    /var/www/html/images/piln.png
 		cp /home/PiLN/style/style.css    /var/www/html/style/style.css
 
+- needs update to switch out apache for lighttpd
 - Add the following ScriptAlias and Directory parameters under "IfDefine ENABLE_USR_LIB_CGI_BIN" in /etc/apache2/conf-available/serve-cgi-bin.conf:
 
 		ScriptAlias /pilnapp/ /home/PiLN/app/
@@ -137,26 +156,9 @@ Stuff to get it to work:
 
 - Install required Python packages:
 
-		sudo apt-get update
-		sudo apt-get install build-essential python-dev python-smbus
-
-- Install pioled requirements:
-
-		These git clones can be done by a user other than PiLN
-
-		git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
-		cd ./Adafruit_Python_GPIO/
-		sudo python3 setup.py install
-
-		git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
-		cd ./Adafruit_Python_SSD1306/
-		sudo python3 setup.py install
-
 		sudo raspi-config #enable interfaces ic2 & spi
 		lsmod | grep spi
 
-                vim /boot/config.txt -- SPI1 can have 3 devices add
-                dtoverlay=spi1-3cs
 - Instal RPLCD for the 20x4 lcd:
 		sudo pip install RPLCD
 		sudo apt install python-smbus
@@ -167,8 +169,6 @@ Stuff to get it to work:
 		git clone https://github.com/adafruit/Adafruit_Python_MAX31855.git
 		cd Adafruit_Python_MAX31855
 		sudo python setup.py install
-
-- Required Python modules (separate installs were not required for these using the latest Raspian build as of July 2017): cgi, jinja2, sys, re, datetime, json, time, logging, RPi.GPIO.
 
 - create the sqlite3 database:
 
@@ -190,17 +190,17 @@ Stuff to get it to work:
 
 - Tuning: 
 
-	+ pvarney's suggestion
+	+ pvarney's suggestion 
 			Proportional:	6.00
 			Integral:	0.04
 			Derivative:	0.00
 			Time internal:	10 seconds
 
-	+ blow dryer test rig
+	+ blow dryer test rig (works great)
 			Proportional:	6.00
-			Integral:	0.04
-			Derivative:	0.00
-			Time internal:	4 seconds
+			Integral:	0.08
+			Derivative:	0.001
+			Time internal:	6 seconds
 
 - Using the Web App:
 
