@@ -44,7 +44,7 @@ LastTmp = 0.0
 #Sensor0 = MAX31856.MAX31856(spi = SPI.SpiDev(0, 0)) #SPI0,CE0
 #--- MAX31855 ---
 Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
-Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
+#Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
 
 
 #def getC():
@@ -331,8 +331,8 @@ while 1:
     # Get temp
     ReadTmp = Sensor0.readTempC()
     ReadITmp = Sensor0.readInternalC()
-    ReadTmp1 = Sensor1.readTempC()
-    ReadITmp1 = Sensor1.readInternalC()
+    ReadTmp1 = Sensor0.readTempC()
+    ReadITmp1 = Sensor0.readInternalC()
     #ReadTmp2 = Sensor2.read_temp_c)
     #ReadITmp2 = Sensor2.read_internal_temp_c()
     if math.isnan(ReadTmp):
