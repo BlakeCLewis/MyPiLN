@@ -113,7 +113,7 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     return Output
 
 
-def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
+def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
 
     L.info("""Entering Fire function with parameters RunID:%d, Seg:%d,
               TargetTmp:%d, Rate:%d, HoldMin:%d, Window:%d
@@ -137,7 +137,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
     Cnt = 0
     RampTrg = 0
     ReadTrg = 0
-    KSTrg = False
     
     while RunState != "Stopped"  and  RunState != "Complete":
         if time.time() >= NextSec:
@@ -167,7 +166,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                         # stop RampTrg and ReadTrg checks
                         ReadTrg = RampTrg = 1
                     RunState = 'KilnSitter/Hold'
-                    L.info("Kilnsitter Trigered - End seconds set to %d" % EndSec)
+                    L.info("KS Triggered - End seconds set to %d" % EndSec)
 
                 #---- RampTrg ----
                 if RampTrg == 0 and RampTmp >= TargetTmp:
@@ -250,12 +249,12 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
             RemainSec = EndSec - int(time.time()) 
             RemMin, RemSec = divmod(RemainSec, 60)
             RemHr, RemMin = divmod(RemMin, 60)
-            RemainTime = "%d:%02d:%02d" % (RemHr, RemMin, RemSec)
+            RemTime = "%d:%02d:%02d" % (RemHr, RemMin, RemSec)
             L.debug("""RunID %d, Segment %d (loop %d) - RunState:%s,
                        ReadTmp:%0.2f, RampTmp:%0.2f, TargetTmp:%0.2f,
                        Output:%0.2f, CycleOnSec:%0.2f, RemainTime:%s
                     """ % (RunID, Seg, Cnt, RunState, ReadTmp, RampTmp,
-                           TargetTmp, Output, CycleOnSec, RemainTime)
+                           TargetTmp, Output, CycleOnSec, RemTime)
             )
            
             if Output > 0:
@@ -281,12 +280,12 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 + '  "ramptemp": "' + str(int(RampTmp)) + '",\n' 
                 + '  "targettemp": "' + str(int(TargetTmp)) + '",\n' 
                 + '  "status": "' + str(RunState) + '",\n' 
-                + '  "segtime": "' + str(RemainTime) + '"\n'  
+                + '  "segtime": "' + str(RemTime) + '"\n'  
                 + '}\n'
             )
             sfile.close()
 
-            lcd.writeFire(RunState,RunID,Seg,ReadTmp,TargetTmp,RampTmp,RemainTime)
+            lcd.writeFire(RunState,RunID,Seg,ReadTmp,TargetTmp,RampTmp,RemTime)
 
             L.debug("Writing stats to Firing DB table...")
 
@@ -316,7 +315,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
             if time.time() > EndSec and ReadTrg == 1:
                 # hold time is over and reached target
                 RunState = "Complete"
-    
+    return KSTrg
 # --- end Fire() ---
 
 L.info("===START PiLN Firing Daemon===")
@@ -356,6 +355,7 @@ while 1:
     lcd.writeIdle(ReadTmp,ReadITmp,ReadTmp1,ReadITmp1) #,ReadT2,ReadI2)
 
     if kilnsitter(): #if kilnsitter is armed
+        KRSeg = True
         # --- Check for 'Running' firing profile ---
         sql = "SELECT * FROM profiles WHERE state=?;"
         p = ('Running',)
@@ -427,7 +427,9 @@ while 1:
                     time.sleep(0.5)
 
                     #--- fire segment ---
-                    Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window, Kp, Ki, Kd)
+                    KSTrg = KSseg
+                    KSseg = Fire(RunID, Seg, TargetTmp, Rate, HoldMin, Window,
+                                 Kp, Ki, Kd, KSTrg)
                     for element in HEAT:
                         GPIO.output(element, False) ## make sure elements are off
 
