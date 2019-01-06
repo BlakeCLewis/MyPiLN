@@ -1,29 +1,30 @@
 WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
 
 Web-based Raspberry Pi Kiln Control Application:
-- forked of pvarney/PiLN
+- fork of pvarney/PiLN
 - switched out LCD for pioled, then again for RPLCD, but with i2c interface(2 GPIO pins)
+	+ i2c is slow, blanking to refresh is anoying, so display class writes without blanking
 - switched out MySQL for sqlite3(low resource consumption)
 - still need to figure out the loging/debug stuff better
 - achieved my goal to run on Rasberry Pi Zero W: 
 	+ sqlite3 instead of MySQL
-	+ lighttpd instead of apache2 (apache memory was 1/2 pi memory, lighttpd does not show up in top)
+	+ lighttpd instead of apache2 (apache memory was 1/2 pi zero memory, lighttpd does not even show up in top)
 	+ 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
 	+ or 'startx konqueror', then shft-ctrl-F to go full screen
 - kiln sitter(KS) as a sensor
 	+ KS functions as 'ARMED', can not start firing without kilnsitter being armed
-	+ mode 1: set top temp higher than KS cone, thermocouple temp is shutoff trigger
-	+ mode 2: set top temp lower than KS cone, ks cone is shutoff trigger
+	+ mode 1: set top temp lower than KS cone, thermocouple temp is shutoff trigger, KS is safety
+	+ mode 2: set top temp higher than KS cone, KS is shutoff trigger, thermocouple is safety
 - display class:
-	+ removes display code from main script
-	+ make it easier to change display hardware
+	+ remove display code from main script
+	+ easier to change display hardware
 
 Future improvements:
 - wrap pioled into display class
 - thermocouple class:
-	+ to ease changing thermocouple chip,
+	+ ease switching thermocouple chip,
 	+ MAX31855 current harware,
-	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S,
+	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S, minimal change
 	+ MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO;
 - performance watchdog:
 	+ shutdown when a minimum rate cannot be maintained,
@@ -38,7 +39,7 @@ Future improvements:
 	+ notify (email)
 
 Hardware:
-- test rig1 - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an amazon cardboard box;
+- test rig1 - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an Amazon A6 cardboard box;
 - 20x4 LCD w/ i2c backpack
 	+ $13, (https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1) uses RPLCD library
 - MAX31855 thermocouple module
@@ -46,18 +47,19 @@ Hardware:
 - High temperature (2372 F) type K thermocouple
 	+ $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
 - 6 pack of thermocouples
-	+ bought fortesting and the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
+	+ bought for testing and the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
 - 1 - uln2003a darlington transitor array to switch 12V coil on the relays
 	+ $1/each on amazon (also used for stepper motors), switches upto 7 channels;
 - 3 - Deltrol 20852-81 relays
-	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT)
+	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT),
 	+ $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
 - 12V power supply
 	+ converts 120vac to 12vdc,
 	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1),
-	+ might be over kill, but rail mounted and runs the coils on the relay, the hdmi lcd power, and also the 5V converter for the PI;
+	+ might be over kill, but rail mounted,
+	+ 12v power suply: relay coils, hdmi lcd, and  5v buck converter;
 - 5V buck converter
-	+ converts 12v to 5v USB out for Pi power,
+	+ converts 12v to 5v USB connector for Pi power,
 	+ $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
 - LCD screen and driver board, (most any hdmi monitor will work) ~$30;
 - terminal blocks to distribute L1, L2, N and GND
@@ -83,12 +85,12 @@ Hardware:
 	+ I have lots of 10-32 screws from rack mount hardware extras;
 	+ tap a hole screw in a screw and use the $10 Harbor Freight angle grinder to flush it up on the back of the box.
 
-Thermocouple tip: One side of both the type-K thermocouple and type-k wire is magnetic (red side), Test with magnet to wire correctly.
+Thermocouple tip: One side of the type-K thermocouple and type-k wire is magnetic (red side), Test with magnet to wire correctly.
 
-I built a kiln shed and I am about ready to put the controller on a kiln:
-- #0 Jen-Ken, very good shape, kiln sitter(timer does not work), 2 ring, 10 brick 22" inside height, 06 bisques labors the last 100;
-- #2 KS1027 new elements, lid repair, base repair, rust removal on controller boxes, painted, built steel rolling stand;
+I built a kiln shed and controller is on #0 kiln:
+- #0 KS1027 new elements, lid repair, base repair, rust removal on controller boxes, painted, built steel rolling stand;
 - #1 KS1027 Skutt, converted to gas, hit 1976F with one burner. (adding burner, 100lb LP tank, tweaking down draft), built steel rolling stand.
+- #2 Jen-Ken, very good shape, kiln sitter(timer does not work), 2 ring, 10 brick 22" inside height, 06 bisques labors the last 100;
 
 
 Stuff to get it to work:
@@ -188,18 +190,19 @@ Stuff to get it to work:
 
 - Tuning: 
 
-	+ pvarney's suggestion 
-			Proportional:	6.00
-			Integral:	0.04
-			Derivative:	0.00
-			Time internal:	10 seconds
+	+ Skutt KS1027 with old elements, oscilate at lower temps
+			Proportional:  16.0
+			Integral:       1.0
+			Derivative:     0.6
+			Time internal: 10 seconds
 
 	+ blow dryer test rig (works great)
-			Proportional:	6.00
-			Integral:	0.08
-			Derivative:	0.001
-			Time internal:	6 seconds
+			Proportional:   6.00
+			Integral:       0.08
+			Derivative:     0.001
+			Time internal:  6 seconds
 
 - Using the Web App:
 
-		On the same network that the RPi is connected to, go to http://<RPi_IPAddress>/pilnapp/home.cgi
+		On the same network that the RPi is connected, http://<RPi_IPAddress>/pilnapp/home.cgi
+		Or on the controler RPi, http://localhost/pilnapp/home.cgi
