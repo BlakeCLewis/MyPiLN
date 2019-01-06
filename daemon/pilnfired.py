@@ -156,9 +156,9 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             if TmpDif > 0:  # Rising Segment
 
                 #---- kilnsitter trigger ----
-                if not kilnsitter() and not KSTrg:
+                if not kilnsitter() and KSTrg:
                     # if KS triggered and not been here before
-                    KSTrg == True
+                    KSTrg == False
                     RampTmp = TargetTmp = ReadTmp
                     if ReadTrg == 0:
                         # HoldMin has not been set
@@ -355,7 +355,7 @@ while 1:
     lcd.writeIdle(ReadTmp,ReadITmp,ReadTmp1,ReadITmp1) #,ReadT2,ReadI2)
 
     if kilnsitter(): #if kilnsitter is armed
-        KRSeg = True
+        KSseg = True
         # --- Check for 'Running' firing profile ---
         sql = "SELECT * FROM profiles WHERE state=?;"
         p = ('Running',)
