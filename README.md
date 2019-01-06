@@ -5,7 +5,6 @@ Web-based Raspberry Pi Kiln Control Application:
 - switched out LCD for pioled, then again for RPLCD, but with i2c interface(2 GPIO pins)
 	+ i2c is slow, blanking to refresh is anoying, so display class writes without blanking
 - switched out MySQL for sqlite3(low resource consumption)
-- still need to figure out the loging/debug stuff better
 - achieved my goal to run on Rasberry Pi Zero W: 
 	+ sqlite3 instead of MySQL
 	+ lighttpd instead of apache2 (apache memory was 1/2 pi zero memory, lighttpd does not even show up in top)
