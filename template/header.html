@@ -13,16 +13,21 @@ Content-type:text/html
         function(data1) {
           $.getJSON("pygetdata.cgi",
             function(data2) {
-              if ( parseInt(data1.proc_update_utime,10) < ( parseInt(data2.unix_timestamp,10) - 20 )) {
+              if (parseInt(data1.proc_update_utime,10) < (parseInt(data2.unix_timestamp,10) - 20)){
                 $('#statusupd1').html('WARNING: Firing process daemon is DOWN' );
                 $('#statusupd2').html('&nbsp;' );
               } else {
-                if ( data1.run_profile === 'none' ) {
-                  $('#statusupd1').html('Firing Process Daemon: IDLE' );
-                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg;C' );
+                if (data1.run_profile === 'none'){
+                  $('#statusupd1').html('Firing Process Daemon: IDLE');
+                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg;C');
                 } else {
-                  $('#statusupd1').html('Firing Process Daemon: ACTIVE with Run ID ' + data1.run_profile + ', Segment ' + data1.run_segment + ', Status: ' + data1.status );
-                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg;C, Ramp Temp: ' + data1.ramptemp + '&deg;C, Target Temp: ' + data1.targettemp + '&deg;C, Segment Time Remaining: ' + data1.segtime );
+                  $('#statusupd1').html('Firing Process Daemon: ACTIVE with Run ID ' + data1.run_profile + ', '+
+                                        'Segment ' + data1.run_segment + ', ' +
+                                        'Status: ' + data1.status );
+                  $('#statusupd2').html('Current Temp: ' + data1.readtemp + '&deg;C, ' +
+                                        'Ramp Temp: ' + data1.ramptemp + '&deg;C, ' +
+                                        'Target Temp: ' + data1.targettemp + '&deg;C, ' +
+                                        'Segment Time Remaining: ' + data1.segtime);
                 }
               }
           });
