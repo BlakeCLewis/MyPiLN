@@ -13,7 +13,7 @@ Content-type:text/html
         function(data1) {
           $.getJSON("pygetdata.cgi",
             function(data2) {
-              if (parseInt(data1.proc_update_utime,10) < (parseInt(data2.unix_timestamp,10) - 20)){
+              if (parseInt(data1.proc_update_utime,10) < (parseInt(data2.unix_timestamp,10) - 30)){
                 $('#statusupd1').html('WARNING: Firing process daemon is DOWN' );
                 $('#statusupd2').html('&nbsp;' );
               } else {
