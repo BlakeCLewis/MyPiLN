@@ -36,7 +36,7 @@ L.basicConfig(filename=LogFile,
 
 #--- Global Variables ---
 ITerm = 0.0
-LastProcVal = 0.0
+Last_Err = 0.0
 SegCompStat = 0
 LastTmp = 0.0
 
@@ -90,20 +90,20 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
             """ % (SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd)
     )
 
-    global ITerm, LastProcVal
+    global Iterm, LastErr
     Err = SetPoint - ProcValue
     ITerm += (Ki * Err);
     if ITerm > IMax:
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
-    DInput = ProcValue - LastProcVal
+    DInput = Err-LastErr
     Output = Kp*Err + ITerm - Kd*DInput;
-    if Output > IMax:
-        Output = IMax
-    elif Output < IMin:
-        Output = IMin
-    LastProcVal = ProcValue
+    if Output > 100:
+        Output = 100
+    elif Output < 0:
+        Output = 0
+    LastErr = Err
 
     L.debug("""Exiting PID update with parameters Error:%0.2f,
                ITerm:%0.2f, DInput:%0.2f, Output:%0.2f
@@ -167,7 +167,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                         ReadTrg = RampTrg = 1
                     RunState = 'KilnSitter/Hold'
                     L.info("KS Triggered - End seconds set to %d" % EndSec)
-
+                #CASE: in temp hold, then ks triggers, does it start hold over?
                 #---- RampTrg ----
                 if RampTrg == 0 and RampTmp >= TargetTmp:
                     # RampTmp (window target temp) is 1 cycle away
