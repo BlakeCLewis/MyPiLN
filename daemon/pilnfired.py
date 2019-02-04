@@ -157,7 +157,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
 
                 #---- kilnsitter trigger ----
                 if not kilnsitter() and KSTrg:
-                    # if KS triggered and not been here before
+                    # if KS open and not been here before
                     KSTrg == False
                     RampTmp = TargetTmp = ReadTmp
                     if ReadTrg == 0:
@@ -167,7 +167,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                         ReadTrg = RampTrg = 1
                     RunState = 'KilnSitter/Hold'
                     L.info("KS Triggered - End seconds set to %d" % EndSec)
-                #CASE: in temp hold, then ks triggers, does it start hold over?
                 #---- RampTrg ----
                 if RampTrg == 0 and RampTmp >= TargetTmp:
                     # RampTmp (window target temp) is 1 cycle away
