@@ -36,7 +36,7 @@ L.basicConfig(filename=LogFile,
 
 #--- Global Variables ---
 ITerm = 0.0
-Last_Err = 0.0
+LastErr = 0.0
 SegCompStat = 0
 LastTmp = 0.0
 
@@ -90,15 +90,15 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
             """ % (SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd)
     )
 
-    global Iterm, LastErr
+    global ITerm, LastErr
     Err = SetPoint - ProcValue
-    ITerm += (Ki * Err);
+    ITerm += (Ki * Err)
     if ITerm > IMax:
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
     DInput = Err-LastErr
-    Output = Kp*Err + ITerm - Kd*DInput;
+    Output = Kp*Err + ITerm - Kd*DInput
     if Output > 100:
         Output = 100
     elif Output < 0:
