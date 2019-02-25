@@ -1,36 +1,30 @@
-WARNING! Electricity and heat are dangerous! Please be careful and seek professional help if you are not experienced dealing with high voltage and heat. Use this code/information at your own risk.
+WARNING! Electricity and heat are dangerous!
 
-Web-based Raspberry Pi Kiln Control Application:
-- fork of pvarney/PiLN
-- switched out LCD for pioled, then again for RPLCD, but with i2c interface(2 GPIO pins)
-	+ i2c is slow, blanking to refresh is anoying, so display class writes without blanking
-- switched out MySQL for sqlite3(low resource consumption)
+Web-based Raspberry Pi Kiln Control:
+- switched out RPLCD with i2c interface(2 GPIO pins)
+- switched out MySQL for sqlite3
 - achieved my goal to run on Rasberry Pi Zero W: 
 	+ sqlite3 instead of MySQL
 	+ lighttpd instead of apache2 (apache memory was 1/2 pi zero memory, lighttpd does not even show up in top)
 	+ 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
 	+ or 'startx konqueror', then shft-ctrl-F to go full screen
+    + or hit it with browser from other machine on your network
 - kiln sitter(KS) as a sensor
 	+ KS functions as 'ARMED', can not start firing without kilnsitter being armed
 	+ mode 1: set top temp lower than KS cone, thermocouple temp is shutoff trigger, KS is safety
 	+ mode 2: set top temp higher than KS cone, KS is shutoff trigger, thermocouple is safety
-- display class:
-	+ remove display code from main script
-	+ easier to change display hardware
 
 Future improvements:
-- wrap pioled into display class
+- record ambient temp with firing data:
 - thermocouple class:
 	+ ease switching thermocouple chip,
 	+ MAX31855 current harware,
 	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S, minimal change
-	+ MAX31850 w/onewire interface, enables multiple thermocouples on one GPIO;
 - performance watchdog:
 	+ shutdown when a minimum rate cannot be maintained,
 	+ notify with options(continue, abort firing, abort segment);
 - inductive current sensors: monitor electric usage to calculate cost of firing, also as an element fault indicator;
 - zone control: thermocouple/section, conrol sections independently;
-- record ambient temp with firing data:
 - crash/loss of power recovery:
 	+ PI comes up, KS is armed & profile is 'Running' then consider unfinished segment
 	+ compare last timestamp of 'Running' firing to current time
@@ -38,17 +32,17 @@ Future improvements:
 	+ notify (email)
 
 Hardware:
-- test rig1 - $10 Raspberry Pi zero w, $3 SSR, $2 k-type thermocouple, $17.50 adafruit.com MAX31855, hair blow dryer and an Amazon A6 cardboard box;
 - 20x4 LCD w/ i2c backpack
 	+ $13, (https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1) uses RPLCD library
+- MAX31856 thermocouple module
+	+ $17.50, Adafruit (https://www.adafruit.com/product/3263);
+    + not yet using, but want to switch soon, it is a much better chip than the MAX31855
 - MAX31855 thermocouple module
-	+ $17.50, Adafruit (https://www.adafruit.com/product/269);
+	+ $14.95, Adafruit (https://www.adafruit.com/product/269);
 - High temperature (2372 F) type K thermocouple
 	+ $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
-- 6 pack of thermocouples
-	+ bought for testing and the thermocouple wire, 3 meters each - (https://www.amazon.com/gp/product/B00OLNZ6XI/ref=oh_aui_detailpage_o06_s02?ie=UTF8&psc=1);
 - 1 - uln2003a darlington transitor array to switch 12V coil on the relays
-	+ $1/each on amazon (also used for stepper motors), switches upto 7 channels;
+	+ $1/each on amazon, using 3 of 7 channels;
 - 3 - Deltrol 20852-81 relays
 	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT),
 	+ $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
@@ -60,7 +54,7 @@ Hardware:
 - 5V buck converter
 	+ converts 12v to 5v USB connector for Pi power,
 	+ $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
-- LCD screen and driver board, (most any hdmi monitor will work) ~$30;
+- monitor w/HDMI, mine is 1366x780;
 - terminal blocks to distribute L1, L2, N and GND
 	+ Ground, $6 (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
 	+ L1,L2,Neutral, 3 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
@@ -68,7 +62,7 @@ Hardware:
 - crimp terminals, #10 awg, hi-temp appliance
 	+ $.16/each, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
 	+ uses the same crimper used on the elements $16, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
-	+ the crimpers take muscle
+	+ the crimpers require muscle
 - lugs #6 AWG copper
 	+ $9 for 10 (https://www.amazon.com/gp/product/B073Y8Q9JQ/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 - big crimper
@@ -87,9 +81,7 @@ Hardware:
 Thermocouple tip: One side of the type-K thermocouple and type-k wire is magnetic (red side), Test with magnet to wire correctly.
 
 I built a kiln shed and controller is on #0 kiln:
-- #0 KS1027 new elements, lid repair, base repair, rust removal on controller boxes, painted, built steel rolling stand;
-- #1 KS1027 Skutt, converted to gas, hit 1976F with one burner. (adding burner, 100lb LP tank, tweaking down draft), built steel rolling stand.
-- #2 Jen-Ken, very good shape, kiln sitter(timer does not work), 2 ring, 10 brick 22" inside height, 06 bisques labors the last 100;
+- #0 KS1027 old elements, lid(split) repaired, base(cracks) repaired, rust removal on controller boxes, painted, built steel rolling stand;
 
 
 Stuff to get it to work:
