@@ -1,14 +1,13 @@
-WARNING! Electricity and heat are dangerous!
+Electricity and heat are dangerous! Evaluate the risk and make go no go decision!
 
 Web-based Raspberry Pi Kiln Control:
-- switched out RPLCD with i2c interface(2 GPIO pins)
-- switched out MySQL for sqlite3
-- achieved my goal to run on Rasberry Pi Zero W: 
+- achieved my goal to run on Rasberry Pi Zero W, but I am currently running on a Raspberry Pi 3b: 
 	+ sqlite3 instead of MySQL
 	+ lighttpd instead of apache2 (apache memory was 1/2 pi zero memory, lighttpd does not even show up in top)
-	+ 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
-	+ or 'startx konqueror', then shft-ctrl-F to go full screen
+	+ on a Pi Zero W 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
     + or hit it with browser from other machine on your network
+    + I run full desktop on Pi 3b
+
 - kiln sitter(KS) as a sensor
 	+ KS functions as 'ARMED', can not start firing without kilnsitter being armed
 	+ mode 1: set top temp lower than KS cone, thermocouple temp is shutoff trigger, KS is safety
@@ -17,19 +16,18 @@ Web-based Raspberry Pi Kiln Control:
 Future improvements:
 - record ambient temp with firing data:
 - thermocouple class:
-	+ ease switching thermocouple chip,
 	+ MAX31855 current harware,
 	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S, minimal change
 - performance watchdog:
+	+ warning notifications, klexting;
 	+ shutdown when a minimum rate cannot be maintained,
-	+ notify with options(continue, abort firing, abort segment);
-- inductive current sensors: monitor electric usage to calculate cost of firing, also as an element fault indicator;
-- zone control: thermocouple/section, conrol sections independently;
+- inductive current sensors: element fault indication;
+- zone control: thermocouple/section and control sections independently;
 - crash/loss of power recovery:
-	+ PI comes up, KS is armed & profile is 'Running' then consider unfinished segment
-	+ compare last timestamp of 'Running' firing to current time
+	+ PI comes up, KS is armed & profile is 'Running' then how to consider unfinished segment
 	+ compare temp at the timestamp to current temp
-	+ notify (email)
+	+ compare last timestamp of 'Running' firing to current time
+	+ notify on power resume, klexting (kiln text message)
 
 Hardware:
 - 20x4 LCD w/ i2c backpack
@@ -41,24 +39,28 @@ Hardware:
 	+ $14.95, Adafruit (https://www.adafruit.com/product/269);
 - High temperature (2372 F) type K thermocouple
 	+ $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
-- 1 - uln2003a darlington transitor array to switch 12V coil on the relays
-	+ $1/each on amazon, using 3 of 7 channels;
+- Thermocouple wire:
+    + I bought the 24awg yellow k-type stuff at the pottery store, amazon has it too;
+    + I use about 8 feet, the controller is attached to the wall.
+- 1 - uln2803a darlington transitor array to switch 12V coil on the relays
+	+ $1/each on amazon, using 3 of 8 channels;
 - 3 - Deltrol 20852-81 relays
 	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT),
 	+ $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
 - 12V power supply
-	+ converts 120vac to 12vdc,
-	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1),
-	+ might be over kill, but rail mounted,
-	+ 12v power suply: relay coils, hdmi lcd, and  5v buck converter;
+	+ converts 120vac to 12vdc;
+	+ supplies 12v to relay coils, HDMI monitor, and 5v buck converter;
+	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1);
+	+ rail mounted.
 - 5V buck converter
-	+ converts 12v to 5v USB connector for Pi power,
+	+ converts 12v to 5v USB connector for Pi power;
 	+ $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
-- monitor w/HDMI, mine is 1366x780;
+- monitor w/HDMI input, mine is 1366x780;
 - terminal blocks to distribute L1, L2, N and GND
 	+ Ground, $6 (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
 	+ L1,L2,Neutral, 3 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
-- #10 awg hi-temp appliance wire to each section;
+- #12 awg hi-temp appliance wire to each element;
+- 3 ceramic 2 pole terminal blocks.
 - crimp terminals, #10 awg, hi-temp appliance
 	+ $.16/each, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
 	+ uses the same crimper used on the elements $16, (https://www.amazon.com/gp/product/B01L2TL63C/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1);
@@ -76,32 +78,41 @@ Hardware:
 - heat shrink, Harbor Freight
 - #10 32tpi tap and #21 jobber drill bit
 	+ I have lots of 10-32 screws from rack mount hardware extras;
-	+ tap a hole screw in a screw and use the $10 Harbor Freight angle grinder to flush it up on the back of the box.
+	+ drill and tap a hole, screw in a screw and use the $10 Harbor Freight angle grinder to cut it flush on the back of the box.
 
-Thermocouple tip: One side of the type-K thermocouple and type-k wire is magnetic (red side), Test with magnet to wire correctly.
+Thermocouple tip: One side of the type-K thermocouple and type-k wire is magnetic(red side), Test with magnet to wire correctly.
 
-I built a kiln shed and controller is on #0 kiln:
-- #0 KS1027 old elements, lid(split) repaired, base(cracks) repaired, rust removal on controller boxes, painted, built steel rolling stand;
+
+- Current kiln controller is attached to is a Old Skutt 281, which is a previous model number of KS1027:
+  + old elements, I am surprised that it easily reaches temp at high speed, this kiln sat unused, outside under roof for 15 years, I don't want to put my new elements in it;
+  + lid(split and flaking)repaired/coated;
+  + base(cracks) repaired;
+  + rust removal on controller boxes, painted;
+  + built 2 steel rolling stands;
 
 
 Stuff to get it to work:
 
 - Pin-Out:
 
+		RPLCD:		GPIO 2 SDA
+		RPLCD:		GPIO 3 SCL
+		RPLCD:		5V
+		RPLCD:		GND
 		MAX31855+:		3.3v
 		MAX31855-:		GND
 		MAX31855 CS:		GPIO 16
 		MAX31855 DO:		GPIO 19
 		MAX31855 CLK:		GPIO 21
-		unl2003a 1:		GPIO 22
+		unl2003a 1:		GPIO 22 
 		unl2003a 3:		GPIO 23
 		unl2003a 5:		GPIO 24
 		unl2003a 8:		GND
 		unl2003a 9:		12V
-		RPLCD:		GPIO 2 SDA
-		RPLCD:		GPIO 3 SCL
-		RPLCD:		5V
-		RPLCD:		GND
+		unl2003a 16:	relay #1 coil - (input is accross the chip on pin1)
+		unl2003a 14:	relay #2 coil - (input is pin3)
+		unl2003a 12:	relay #3 coil - (input is pin5)
+        12V:	relay 1,2 and 3 coils
 
 - Install PiLN files in /home and create log directory:
 
@@ -123,7 +134,7 @@ Stuff to get it to work:
 		cp /home/PiLN/images/piln.png   /var/www/html/images/piln.png
 		cp /home/PiLN/style/style.css   /var/www/html/style/style.css
 
-- needs update to switch out apache for lighttpd
+- !!!!!!! needs update to switched out Apache for lighttpd !!!
 - Add the following ScriptAlias and Directory parameters under "IfDefine ENABLE_USR_LIB_CGI_BIN" in /etc/apache2/conf-available/serve-cgi-bin.conf:
 
 		ScriptAlias /pilnapp/ /home/PiLN/app/
@@ -168,32 +179,20 @@ Stuff to get it to work:
 		sqlite3 /var/www/db/PiLN/PiLN.sqlite3
 		sqlite> .read /home/PiLN/PiLN.sql;
 
-- (I do not use this yet) To enable automatic startup of the daemon (Had to do the copy/enable/delete/link in order to get systemctl enable to work):
-
-		cp /home/PiLN/daemon/pilnfired.service /etc/systemd/system/
-		sudo systemctl daemon-reload
-		sudo systemctl enable pilnfired
-		sudo rm /etc/systemd/system/pilnfired.service
-		sudo ln -s /home/PiLN/daemon/pilnfired.service /etc/systemd/system/pilnfired.service
-		sudo systemctl daemon-reload
-		sudo systemctl start pilnfired
-		sudo systemctl status pilnfired
-
 - Tuning: 
 
-	+ Skutt KS1027 with old elements, oscilate at lower temps
-			Proportional:  16.0
-			Integral:       1.0
-			Derivative:     0.6
-			Time internal: 10 seconds
-
-	+ blow dryer test rig (works great)
-			Proportional:   6.00
-			Integral:       0.08
-			Derivative:     0.001
-			Time internal:  6 seconds
+	+ Skutt KS1027 with old elements, oscilate at lower temps, does well over 600C:
+			Proportional:  20.0
+			Integral:       0.2
+			Derivative:     0.2
+			Time internal: 30 seconds
+            The response cycle is about 4 minutes.
 
 - Using the Web App:
 
 		On the same network that the RPi is connected, http://<RPi_IPAddress>/pilnapp/home.cgi
-		Or on the controler RPi, http://localhost/pilnapp/home.cgi
+		Or, on the controler RPi, http://localhost/pilnapp/home.cgi
+
+- Start the firing daemon:
+
+		python3 ./daemon/pilnfired.py
