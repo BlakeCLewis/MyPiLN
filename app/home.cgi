@@ -116,7 +116,7 @@ elif page == "run":
         cursor.execute(sql, p)
         db.commit()
         template = env.get_template("reload.html") 
-        bdy = template.render(target_page = "view", timeout = 1000,
+        bdy = template.render(target_page = "view", timeout = 800,
               message = "Updating profile to running state...",
               params = {"run_id": run_id, "state":"Running", "notes": notes}
         )
