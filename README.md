@@ -218,6 +218,6 @@ Test firing, I roasted some raw materials:
 		3 #12-2 w/ gnd power cords to kiln, 15' #6-3 w/8 gnd to RV receptical on back of garage. 
 ![:::](./mypiln_inside.png)
 
-This is the state of the kiln during the above 1000C test:
+- This is the state of the kiln during the above 1000C test:
 3 porcelain teminal blocks, with appliance high temp wire, each block feeds 1 section/2 elements.
 ![:::](./kiln_element_wiring.png)
