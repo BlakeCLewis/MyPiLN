@@ -201,10 +201,18 @@ Glaze firing on Feburary 23, 2019:
 ![:::](./glaze_firing_graph.png)
 Test firing, I roasted some raw materials:
 ![:::](./mypiln_934C.png)
-This is the state of the kiln during the above test:
-White wires go to Kilnsitter
-thermocouple not hooked up, but connect to the little boards in center of top.
-3 kiln sections, 3 relays, 3 12awg cords w/twistlock connectors
+Devices left to right/top to bottom:
+		White wire goes to Kilnsitter;
+		12V power supply from main AC voltage;
+		4xUSB power jacks, steps 12v down to 5V;
+		3 thermocouple chips, using 1, Thermocouple not yet hooked up;
+		Raspbery Pi 3b with expermental board on top/with chip to drive 12v relays;
+		3 relays, 1 for each kiln section;
+		250 receptical, no control for manual kiln, maybe put it on big relay in futer;
+		bus bars L1,L2,Neutral are covered, ground is bare;
+		3 #12-2 w/ gnd power cords to kiln, 15' #6-3 w/8 gnd to RV receptical on back of garage. 
 ![:::](./mypiln_inside.png)
-3 porclien teminal blocks, with appliance hitemp wire, each block feeds 1 section/2 elements
+
+This is the state of the kiln during the above 1000C test:
+3 porcelain teminal blocks, with appliance high temp wire, each block feeds 1 section/2 elements.
 ![:::](./kiln_element_wiring.png)
