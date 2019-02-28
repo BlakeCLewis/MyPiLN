@@ -6,7 +6,7 @@ import sqlite3
 import json
 import time
 debug = 1 
-SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
+SQLDB = '/home/mypiln/MyPiLN/db/PiLN.sqlite3'
 # Get json data from standard in
 jsonin = ""
 for line in sys.stdin:
