@@ -10,8 +10,8 @@ import sqlite3
 import RPi.GPIO as GPIO
 import Adafruit_GPIO
 import Adafruit_GPIO.SPI as SPI
-#import Adafruit_MAX31856.MAX31856 as MAX31856
-import Adafruit_MAX31855.MAX31855 as MAX31855
+from Adafruit_MAX31856 import MAX31856 as MAX31856
+#from Adafruit_MAX31855 import MAX31855 as MAX31855
 from display import display
 
 # initialize display (hardware i2c in display.py)
@@ -40,11 +40,13 @@ LastErr = 0.0
 SegCompStat = 0
 LastTmp = 0.0
 
-#--- MAX31856 only works on SPI0, SPI1 cannot do mode=1 ---
-#Sensor0 = MAX31856.MAX31856(spi = SPI.SpiDev(0, 0)) #SPI0,CE0
+#--- MAX31856 only works on SPI device 0, SPI device 1 cannot do mode=1 ---
+SPI_DEVICE = 0
+SPI_PORT   = 0
+Sensor0 = MAX31856(tc_type=MAX31856.MAX31856_K_TYPE,spi = SPI.SpiDev(SPI_PORT,SPI_DEVICE))
 #--- MAX31855 ---
-Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
-#Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
+#Sensor0 = MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
+#Sensor1 = MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
 
 
 #def getC():
@@ -54,8 +56,8 @@ Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
 #        return sensor.readTempC()
 
 #--- Relays ---
-HEAT = (24, 23, 22)
-for element in HEAT:
+HEAT = (22, 23, 24)
+	for element in HEAT:
     GPIO.setup(element, GPIO.OUT)
     GPIO.output(element, GPIO.LOW)
 
@@ -143,8 +145,8 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             Cnt += 1                         # record keeping only
             NextSec = time.time() + Window   # time at end of window
             LastTmp = ReadTmp
-            ReadTmp = Sensor0.readTempC()
-            ReadITmp = Sensor0.readInternalC()
+            ReadTmp = Sensor0.read_temp_c()
+            ReadITmp = Sensor0.read_internal_temp_c()
             if math.isnan(ReadTmp)  or  ReadTmp == 0  or  ReadTmp > 1330:
                 # error reading
                 ReadTmp = LastTmp
