@@ -198,3 +198,6 @@ Stuff to get it to work:
 		python3 ./daemon/pilnfired.py
 
 ![:::](./glaze_firing_graph.png)
+![:::](./kiln_element_wiring.png)
+![:::](./mypiln_934C.png)
+![:::](./mypiln_inside.png)
