@@ -197,11 +197,16 @@ Stuff to get it to work:
 
 		python3 ./daemon/pilnfired.py
 
-Glaze firing on Feburary 23, 2019:
+- Glaze firing on Feburary 23, 2019:
+
 ![:::](./glaze_firing_graph.png)
+
 Test firing, I roasted some raw materials:
+
 ![:::](./mypiln_934C.png)
-Devices left to right/top to bottom:
+
+- Devices left to right/top to bottom:
+
 		White wire goes to Kilnsitter;
 		12V power supply from main AC voltage;
 		4xUSB power jacks, steps 12v down to 5V;
