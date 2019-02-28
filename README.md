@@ -197,7 +197,14 @@ Stuff to get it to work:
 
 		python3 ./daemon/pilnfired.py
 
+Glaze firing on Feburary 23, 2019:
 ![:::](./glaze_firing_graph.png)
-![:::](./kiln_element_wiring.png)
+Test firing, I roasted some raw materials:
 ![:::](./mypiln_934C.png)
+This is the state of the kiln during the above test:
+White wires go to Kilnsitter
+thermocouple not hooked up, but connect to the little boards in center of top.
+3 kiln sections, 3 relays, 3 12awg cords w/twistlock connectors
 ![:::](./mypiln_inside.png)
+3 porclien teminal blocks, with appliance hitemp wire, each block feeds 1 section/2 elements
+![:::](./kiln_element_wiring.png)
