@@ -72,6 +72,7 @@ Stuff to get it to work:
 - Tuning: 
 
 	+ Skutt KS1027 with old elements, oscilate at lower temps, does well over 600C:
+
 			Proportional:  20.0
 			Integral:       0.2
 			Derivative:     0.2
