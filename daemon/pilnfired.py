@@ -20,11 +20,11 @@ lcd.clear()
 
 GPIO.setmode(GPIO.BCM)
 
-AppDir = '/home/pi/git/MyPiLN'
-StatFile = '/var/www/html/pilnstat.json'
+AppDir = '/home/mypiln/MyPiLN'
+StatFile = '/home/mypiln/MyPiLN/html/pilnstat.json'
 
 #--- sqlite3 db file ---
-SQLDB = '/var/www/db/MyPiLN/PiLN.sqlite3'
+SQLDB = '/home/mypiln/MyPiLN/db/PiLN.sqlite3'
 
 #--- Set up logging ---
 LogFile = time.strftime(AppDir + '/log/pilnfired.log')
