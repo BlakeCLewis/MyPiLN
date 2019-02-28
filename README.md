@@ -196,3 +196,5 @@ Stuff to get it to work:
 - Start the firing daemon:
 
 		python3 ./daemon/pilnfired.py
+
+![:::](./glaze_firing_graph.png)
