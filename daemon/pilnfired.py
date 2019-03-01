@@ -11,7 +11,6 @@ import RPi.GPIO as GPIO
 import Adafruit_GPIO
 import Adafruit_GPIO.SPI as SPI
 from Adafruit_MAX31856 import MAX31856 as MAX31856
-#from Adafruit_MAX31855 import MAX31855 as MAX31855
 from display import display
 
 # initialize display (hardware i2c in display.py)
@@ -40,24 +39,14 @@ LastErr = 0.0
 SegCompStat = 0
 LastTmp = 0.0
 
-#--- MAX31856 only works on SPI device 0, SPI device 1 cannot do mode=1 ---
-SPI_DEVICE = 0
-SPI_PORT   = 0
+#--- MAX31856 only works on SPI0, SPI1 cannot do mode=1 ---
+SPI_PORT   = 0  #SPI0
+SPI_DEVICE = 0  #CS0
 Sensor0 = MAX31856(tc_type=MAX31856.MAX31856_K_TYPE,spi = SPI.SpiDev(SPI_PORT,SPI_DEVICE))
-#--- MAX31855 ---
-#Sensor0 = MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
-#Sensor1 = MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
-
-
-#def getC():
-#    if isinstance(sensor, MAX31856.MAX31856)
-#        return sensor.read_temp_c()
-#    elif isinstance(sensor, MAX31855.MAX31855)
-#        return sensor.readTempC()
 
 #--- Relays ---
 HEAT = (22, 23, 24)
-	for element in HEAT:
+for element in HEAT:
     GPIO.setup(element, GPIO.OUT)
     GPIO.output(element, GPIO.LOW)
 

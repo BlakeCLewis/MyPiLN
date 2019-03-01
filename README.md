@@ -4,16 +4,21 @@ Stuff to get it to work:
 
 - Pin-Out:
 
+		kilnsitter:	3.3v
+		kilnsitter:	GPIO 27
+
 		RPLCD VCC:	5V
 		RPLCD GND:	GND
 		RPLCD SDA:	GPIO 2
 		RPLCD SCL:	GPIO 3
+
 		MAX31856 3vo:	3.3v
 		MAX31856 GND:	GND
 		MAX31856 SDO:	GPIO 9
 		MAX31856 SDI:	GPIO 10
 		MAX31856 CS:	GPIO 8
 		MAX31856 SCK:	GPIO 11
+
 		unl2003a 1:	GPIO 22 
 		unl2003a 3:	GPIO 23
 		unl2003a 5:	GPIO 24
@@ -23,7 +28,6 @@ Stuff to get it to work:
 		unl2003a 14:	relay #2 coil
 		unl2003a 12:	relay #3 coil
 		12V:		relay 1,2 and 3 coils
-		kilnsitter:	3.3v and GPIO 27
 
 - Install PiLN files in /home and create log directory:
 
@@ -40,8 +44,6 @@ Stuff to get it to work:
 
 		sudo apt-get install lighthttpd
 
-- python3:
-
 - Configure raspberry pi interfaces:
 
 		sudo raspi-config
@@ -54,7 +56,13 @@ Stuff to get it to work:
 
 - Install MAX31856 Module:
 
-		cd ~
+		cd
+		sudo apt-get update
+		sudo apt-get install build-essential python-pip python-dev python-smbus git
+		git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+		cd Adafruit_Python_GPIO
+		sudo python3 setup.py install
+		cd
 		git clone git@github.com:johnrbnsn/Adafruit_Python_MAX31856.git
 		cd Adafruit_Python_MAX31856
 		sudo python3 setup.py install
