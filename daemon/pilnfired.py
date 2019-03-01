@@ -44,13 +44,13 @@ SPI_PORT   = 0  #SPI0
 SPI_DEVICE = 0  #CS0
 Sensor0 = MAX31856(tc_type=MAX31856.MAX31856_K_TYPE,spi = SPI.SpiDev(SPI_PORT,SPI_DEVICE))
 
-#--- Relays ---
+#---output GPIOs for 3 Relays ---
 HEAT = (22, 23, 24)
 for element in HEAT:
     GPIO.setup(element, GPIO.OUT)
     GPIO.output(element, GPIO.LOW)
 
-#--- kiln sitter ---
+#--- input GPIO for kilnsitter ---
 KS = 27
 GPIO.setup(KS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 def kilnsitter():
@@ -60,10 +60,10 @@ def kilnsitter():
 #--- Cleanup ---
 def clean(*args):
     print("\nProgram ending! Cleaning up...\n")
+    lcd.close(clear=True)
     for element in HEAT:
         GPIO.output(element, False)
     GPIO.cleanup()
-    lcd.close(clear=True)
     print("All clean - Stopping.\n")
     os._exit(0)
 
@@ -83,11 +83,13 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
 
     global ITerm, LastErr
     Err = SetPoint - ProcValue
+    # intergal ΣErr
     ITerm += (Ki * Err)
     if ITerm > IMax:
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
+    #derivative is ΔErr
     DInput = Err-LastErr
     Output = Kp*Err + ITerm - Kd*DInput
     if Output > 100:
