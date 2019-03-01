@@ -160,7 +160,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                 #---- kilnsitter trigger ----
                 if not kilnsitter() and KSTrg:
                     # if KS open and not been here before
-                    KSTrg == False
+                    KSTrg = False
                     RampTmp = TargetTmp = ReadTmp
                     if ReadTrg == 0:
                         # HoldMin has not been set
@@ -182,7 +182,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                         RunState = "Ramp/Hold"
                     else:
                         RunState = "Ramp complete"
-
                 #---- ReadTrg ----
                 if ((TargetTmp-ReadTmp <= TargetTmp*0.006) 
                     or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
@@ -203,7 +202,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                         RunState = "Target/Ramp"
                     else:
                         RunState = "Ramp complete"
-
                 if ((ReadTmp-TargetTmp <= TargetTmp*0.006)
                         or (ReadTmp <= TargetTmp)) and ReadTrg == 0:
                     # Read temp dropped to target or close enough
@@ -232,7 +230,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                     # Hey we there before we even started!
                     RampTmp = TargetTmp # set window target to final target
                 LastErr = 0.0
-                Integral = 0.0
                 L.info("""First pass of firing loop - TargetTmp:%0.2f,
                           StartTmp:%0.2f,RampTmp:%0.2f, TmpDif:%0.2f,
                           RampMin:%0.2f, Steps:%d, StepTmp:%0.2f,
