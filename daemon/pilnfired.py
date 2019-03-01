@@ -141,22 +141,21 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             if math.isnan(ReadTmp)  or  ReadTmp == 0  or  ReadTmp > 1330:
                 # error reading
                 ReadTmp = LastTmp
-
             if RampTrg == 0:
                 # if RampTmp has not yet reached TargetTmp increase RampTmp
                 RampTmp += StepTmp
 
-            if TmpDif > 0:  # Rising Segment
-
+            # Rising Segment
+            if TmpDif > 0:
                 #---- kilnsitter trigger ----
                 if not kilnsitter() and KSTrg:
                     # if KS open and not been here before
-                    KSTrg = False
+                    KSTrg = False  #do not re-enter
                     RampTmp = TargetTmp = ReadTmp
                     if ReadTrg == 0:
-                        # HoldMin has not been set
+                        # Hold has not been started by ReadTrg
                         EndSec = int(time.time()) + HoldMin*60
-                        # stop RampTrg and ReadTrg checks
+                        # block RampTrg and ReadTrg from resetting hold
                         ReadTrg = RampTrg = 1
                     RunState = 'KilnSitter/Hold'
                     L.info("KS Triggered - End seconds set to %d" % EndSec)
@@ -173,7 +172,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                         RunState = "Ramp/Hold"
                     else:
                         RunState = "Ramp complete"
-
                 #---- ReadTrg ----
                 if ((TargetTmp-ReadTmp <= TargetTmp*0.006) 
                     or (ReadTmp >= TargetTmp)) and ReadTrg == 0:
@@ -185,19 +183,21 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                     else:
                         RunState = "Target Reached"
 
-            elif TmpDif < 0: # Falling Segment
-                # Ramp temp dropped to target
+            # Falling Segment
+            elif TmpDif < 0:
+                #---- RampTrg ----
                 if RampTmp <= TargetTmp  and  RampTrg == 0:
+                # Ramp temp dropped to target
                     RampTmp = TargetTmp
                     RampTrg = 1
                     if ReadTrg == 1:
                         RunState = "Target/Ramp"
                     else:
                         RunState = "Ramp complete"
-
+                #---- ReadTrg ----
                 if ((ReadTmp-TargetTmp <= TargetTmp*0.006)
                         or (ReadTmp <= TargetTmp)) and ReadTrg == 0:
-                    # Read temp dropped to target or close enough
+                # Read temp dropped to target or close enough
                     ReadTrg = 1
                     EndSec = int(time.time()) + HoldMin*60
                     L.info("Set temp reached - End seconds set to %d" % EndSec)
@@ -206,8 +206,8 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                     else:
                         RunState = "Target Reached"
 
+            # Initial Setup
             if StartTmp == 0:
-                # initial setup
                 StartTmp = ReadTmp
                 StartSec = int(time.time())
                 NextSec = StartSec + Window
@@ -215,15 +215,14 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                 RampMin = abs(TmpDif) * 60 / Rate # minutes to target at rate
                 Steps = RampMin * 60 / Window     # steps of window size
                 StepTmp = TmpDif / Steps          # degrees / step
-                # estimated end of segment
                 EndSec = StartSec + RampMin*60 + HoldMin*60
+                                                  # estimated end of segment
                 RampTmp = StartTmp + StepTmp      # window target
                 if ((TmpDif > 0 and RampTmp > TargetTmp) 
                    or (TmpDif < 0 and RampTmp < TargetTmp)):
                     # Hey we there before we even started!
                     RampTmp = TargetTmp # set window target to final target
                 LastErr = 0.0
-                Integral = 0.0
                 L.info("""First pass of firing loop - TargetTmp:%0.2f,
                           StartTmp:%0.2f,RampTmp:%0.2f, TmpDif:%0.2f,
                           RampMin:%0.2f, Steps:%d, StepTmp:%0.2f,
@@ -248,20 +247,17 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                     """ % (RunID, Seg, Cnt, RunState, ReadTmp, RampTmp,
                            TargetTmp, Output, CycleOnSec, RemTime)
             )
-           
             if Output > 0:
                 L.debug("==>Relay On")
                 for element in HEAT:
                     GPIO.output(element, True)
                 time.sleep(CycleOnSec)
-
             if Output < 100:
                 L.debug("==>Relay Off")
                 for element in HEAT:
                     GPIO.output(element, False)
 
             L.debug("Write status information to status file %s:" % StatFile)
-
             # Write status to file for reporting on web page
             sfile = open(StatFile, "w+")
             sfile.write('{\n' +
@@ -381,7 +377,7 @@ while 1:
             SQLCur.execute(sql, p)
             ProfSegs = SQLCur.fetchall()
 
-            # --- begin firing loop ---
+            # --- for each segment in firing profile loop ---
             for Row in ProfSegs:
                 RunID = Row['run_id']
                 Seg = Row['segment']
