@@ -83,13 +83,11 @@ time.sleep(1)
 
 # PID Update
 def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
-
     L.debug("""Entering PID update with parameters SetPoint:%0.2f,
                ProcValue:%0.2f, IMax:%0.2f, IMin:%0.2f, Window:%d,
                Kp: %0.3f, Ki: %0.3f, Kd: %0.3f
             """ % (SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd)
     )
-
     global ITerm, LastErr
     Err = SetPoint - ProcValue
     ITerm += (Ki * Err)
@@ -104,17 +102,13 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     elif Output < 0:
         Output = 0
     LastErr = Err
-
     L.debug("""Exiting PID update with parameters Error:%0.2f,
                ITerm:%0.2f, DInput:%0.2f, Output:%0.2f
             """ % (Err, ITerm, DInput, Output)
     )
-
     return Output
 
-
 def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
-
     L.info("""Entering Fire function with parameters RunID:%d, Seg:%d,
               TargetTmp:%d, Rate:%d, HoldMin:%d, Window:%d
            """ % (RunID, Seg, TargetTmp1, Rate, HoldMin, Window)
@@ -137,7 +131,6 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
     Cnt = 0
     RampTrg = 0
     ReadTrg = 0
-    
     while RunState != "Stopped"  and  RunState != "Complete":
         if time.time() >= NextSec:
             Cnt += 1                         # record keeping only
@@ -158,7 +151,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                 #---- kilnsitter trigger ----
                 if not kilnsitter() and KSTrg:
                     # if KS open and not been here before
-                    KSTrg == False
+                    KSTrg = False
                     RampTmp = TargetTmp = ReadTmp
                     if ReadTrg == 0:
                         # HoldMin has not been set
