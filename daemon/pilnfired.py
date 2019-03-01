@@ -159,7 +159,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, cone=False):
                 #---- kilnsitter trigger ----
                 if not kilnsitter() and not KSTrg:
                     # if KS triggered and not been here before
-                    KSTrg == True
+                    KSTrg = True
                     RampTmp = TargetTmp = ReadTmp
                     if ReadTrg == 0:
                         # HoldMin has not been set
