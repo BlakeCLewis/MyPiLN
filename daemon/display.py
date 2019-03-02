@@ -66,16 +66,31 @@ class display(CharLCD):
         #self.write_string(line3[0:19])
 
 if __name__=='__main__':
+    from signal import *
+    import os
+    import RPi.GPIO as GPIO
     from time import sleep
     from display import display
     duh=display()
+
+    def clean(*args):
+        print('doing the cleanup')
+        duh.close(clear=True)
+        os._exit(0)
+    for sig in (SIGABRT, SIGINT, SIGTERM):
+        signal(sig, clean)
+
     for i in range(8):
         duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
         print ('')
         sleep(3)
+
     for i in range(8):
         duh.writeIdle(1222+i*2,20,1225+1*2,20) #,1223,20)
         print ('')
         sleep(3)
+
     duh.close(clear=True)
+
+    clean()
 

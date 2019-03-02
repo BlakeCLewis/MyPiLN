@@ -1,6 +1,12 @@
 """
-this is test file only and is not needed for working program
+this is testi module and is not needed for pilnfired.py daemon
+  assumption: display.py test run successfully
+  If display is not set up, comment out the while True loop
+  and it will just print to screen once
 """
+
+from signal import *
+import os
 import time
 from Adafruit_GPIO import SPI
 from Adafruit_MAX31856 import MAX31856
@@ -14,9 +20,11 @@ lcd = display()
 lcd.clear()
 
 def clean(*args):
+    print('doing the cleanup')
     lcd.close(clear=True)
-    GPIO.cleanup()
     os._exit(0)
+for sig in (SIGABRT, SIGINT, SIGTERM):
+    signal(sig, clean)
 
 temp = sensor.read_temp_c()
 internal = sensor.read_internal_temp_c()
@@ -30,5 +38,5 @@ while True:
     lcd.writeIdle(temp,internal,temp,internal)
     time.sleep(3)
 
-
+clean()
 
