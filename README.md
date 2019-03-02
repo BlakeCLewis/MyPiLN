@@ -40,10 +40,6 @@ Stuff to get it to work:
 
 		sudo apt-get install sqlite3 sqlite3-doc
 
-- Install lighthttpd:
-
-		sudo apt-get install lighttpd lighttpd-doc
-
 - Configure raspberry pi interfaces:
 
 		sudo raspi-config
@@ -52,13 +48,12 @@ Stuff to get it to work:
 - Instal RPLCD for the 20x4 lcd:
 
 		sudo pip3 install RPLCD
-		sudo apt install python3-smbus
 
 - Install MAX31856 Module:
 
 		cd
 		sudo apt-get update
-		sudo apt-get install build-essential python-pip python-dev python-smbus git
+		sudo apt-get install build-essential python3-pip python3-dev python3-smbus git
 		git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
 		cd Adafruit_Python_GPIO
 		sudo python3 setup.py install
@@ -66,16 +61,26 @@ Stuff to get it to work:
 		git clone git@github.com:johnrbnsn/Adafruit_Python_MAX31856.git
 		cd Adafruit_Python_MAX31856
 		sudo python3 setup.py install
+- test modules:
+
+		cd ~/MyPiLN/daemon
+		python3 display.py
+		python3 max31856_test.py
+
+- Install lighthttpd:
+
+		sudo apt-get install lighttpd lighttpd-doc
+
+- Accessing the Web App:
+
+		On the same network that the RPi is connected, http://<RPi_IPAddress>/pilnapp/home.cgi
+		Or, on the controler RPi, http://localhost/pilnapp/home.cgi
+		The graphing is google api and requires web access by the browser 
 
 - Start the firing daemon:
 
 		python3 /home/mypiln/MyPiLN/daemon/pilnfired.py &
 
-- Using the Web App:
-
-		On the same network that the RPi is connected, http://<RPi_IPAddress>/pilnapp/home.cgi
-		Or, on the controler RPi, http://localhost/pilnapp/home.cgi
-		The graphing is google api and requires web access by the browser 
 
 - Tuning: 
 
