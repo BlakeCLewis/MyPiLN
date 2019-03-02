@@ -40,12 +40,14 @@ SegCompStat = 0
 LastTmp = 0.0
 
 #--- MAX31856 only works on SPI0, SPI1 cannot do mode=1 ---
-SPI_PORT   = 0  #SPI0
+SPI_PORT = 0    #SPI0
 SPI_DEVICE = 0  #CS0
 Sensor0 = MAX31856(tc_type=MAX31856.MAX31856_K_TYPE,spi = SPI.SpiDev(SPI_PORT,SPI_DEVICE))
 
 #---output GPIOs for 3 Relays ---
-HEAT = (22, 23, 24)
+#HEAT = (22, 23, 24)
+#---testing w/ 1 relay ---
+HEAT = (24)
 for element in HEAT:
     GPIO.setup(element, GPIO.OUT)
     GPIO.output(element, GPIO.LOW)

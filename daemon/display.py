@@ -1,3 +1,8 @@
+"""
+this class is used in main program pilnfired.py
+it can be run standalone 'python3 display.py' to test display w/ mock data 
+"""
+
 import sys
 import RPi.GPIO as GPIO
 import spidev
@@ -59,20 +64,18 @@ class display(CharLCD):
         self.write_string(line2[0:19])
         #self.cursor_pos = (3, 0)
         #self.write_string(line3[0:19])
-"""
-duh=display()
-for i in range(8):
-    duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
-    print ('')
-    sleep(3)
-for i in range(8):
-    duh.writeIdle(1222+i*2,20,1225+1*2,20) #,1223,20)
-    print ('')
-    sleep(3)
-duh.close(clear=True)
 
-duh.writeIdle(1222,20,1225,20)
-duh.writeFire('Running',19,2,768,1315,250,'10:00:10')
+if __name__=='__main__':
+    from time import sleep
+    from display import display
+    duh=display()
+    for i in range(8):
+        duh.writeFire('Running',19,2,556+i*4,1315,108,'10:00:10')
+        print ('')
+        sleep(3)
+    for i in range(8):
+        duh.writeIdle(1222+i*2,20,1225+1*2,20) #,1223,20)
+        print ('')
+        sleep(3)
+    duh.close(clear=True)
 
-https://www.programiz.com/python-programming/inheritance
-"""
