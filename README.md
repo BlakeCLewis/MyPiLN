@@ -38,11 +38,11 @@ Stuff to get it to work:
 
 - Install sqlite3:
 
-		sudo apt-get install sqlite3
+		sudo apt-get install sqlite3 sqlite3-doc
 
 - Install lighthttpd:
 
-		sudo apt-get install lighthttpd
+		sudo apt-get install lighttpd lighttpd-doc
 
 - Configure raspberry pi interfaces:
 
