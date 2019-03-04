@@ -1,6 +1,6 @@
 
 class mypid:
-    def __init__(self,Ck,kp=5,ki=5,kd=5,window=30,imax=40,omax=100):
+    def __init__(self,Ck,kp=5.0,ki=5.0,kd=5.0,window=30,imax=40,omax=100):
 
         #initialize setpoints to current kiln temp set up 0 error
         self.sp = list(Ck,Ck)
