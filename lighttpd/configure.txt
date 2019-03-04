@@ -1,13 +1,12 @@
 
-sudo su -
+sudo cp lighttpd.conf /etc/lighttpd/
+
 cd /etc/lighttpd/conf-enabled
-ln -s ../conf-available/10-cgi.conf .
-ln -s ../conf-available/90-javascript-alias.conf .
+sudo ln -s ../conf-available/10-cgi.conf .
 
 ls -l
 lrwxrwxrwx 1 root root   29 Nov 29 22:23 10-cgi.conf -> ../conf-available/10-cgi.conf
-lrwxrwxrwx 1 root root   42 Jun 26  2018 90-javascript-alias.conf -> ../conf-available/90-javascript-alias.conf
 
-cp lighttpd.conf /etc/lighttpd/
-
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+sudo iptables-save
 

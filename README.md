@@ -38,7 +38,7 @@ Stuff to get it to work:
 
 - Install sqlite3:
 
-		sudo apt-get install sqlite3 sqlite3-doc
+		sudo apt-get install sqlite3
 
 - Configure raspberry pi interfaces:
 
@@ -69,7 +69,14 @@ Stuff to get it to work:
 
 - Install lighthttpd:
 
-		sudo apt-get install lighttpd lighttpd-doc
+		sudo apt-get install lighttpd
+                sudo cp lighttpd.conf /etc/lighttpd/
+                cd /etc/lighttpd/conf-enabled
+                sudo ln -s ../conf-available/10-cgi.conf .
+                sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+                sudo iptables save
+                cd 
+
 
 - Accessing the Web App:
 
