@@ -50,7 +50,7 @@ class display(CharLCD):
         self.cursor_pos = (3, 0)
         self.write_string(line3[0:19])
 
-    def writeIdle(self,ReadT0,ReadI0,ReadT1,ReadI1): #,ReadT2,ReadI2):
+    def writeIdle(self,ReadT0,ReadI0,ReadT1,ReadI1):
         line0='IDLE: ' + next(self._wheel) + '             '
         line1='T0 ' + str(int(ReadT0)) + '\x01C  ' + str(int(ReadI0)) + '\x01C     '
         line2='T1 ' + str(int(ReadT1)) + '\x01C  ' + str(int(ReadI1)) + '\x01C     '
@@ -65,12 +65,28 @@ class display(CharLCD):
         #self.cursor_pos = (3, 0)
         #self.write_string(line3[0:19])
 
+    def writeLog(self,RunID,dastrtime,temp0,temp1,temp2):
+        line0='RunID: ' + str(RunID) + '   ' + dastrtime
+        line1='Tnow ' + str(round(temp0,1)) + '\x01C     '
+        line2='Tn-1 ' + str(round(temp1,1)) + '\x01C     '
+        line3='Tn-2 ' + str(round(temp2,1)) + '\x01C     '
+
+        self.cursor_pos = (0, 0)
+        self.write_string(line0[0:19])
+        self.cursor_pos = (1, 0)
+        self.write_string(line1[0:19])
+        self.cursor_pos = (2, 0)
+        self.write_string(line2[0:19])
+        self.cursor_pos = (3, 0)
+        self.write_string(line3[0:19])
+
+
 if __name__=='__main__':
     from signal import *
     import os
     import RPi.GPIO as GPIO
     from time import sleep
-    from display import display
+    #from display import display
     duh=display()
 
     def clean(*args):
@@ -86,7 +102,7 @@ if __name__=='__main__':
         sleep(3)
 
     for i in range(8):
-        duh.writeIdle(1222+i*2,20,1225+1*2,20) #,1223,20)
+        duh.writeIdle(1222+i*2,20,1225+1*2,20)
         print ('')
         sleep(3)
 
