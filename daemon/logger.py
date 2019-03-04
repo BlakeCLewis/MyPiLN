@@ -1,12 +1,37 @@
 #!/usr/bin/python3
 
 """
-sudo raspi-config
-  enable interfaces ic2 & spi
+#requires: display.py
 
-sudo pip3 install RPLCD
+#buy parts:
+https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1
+https://www.adafruit.com/product/3263
+https://www.amazon.com/Temperature-Thermocouple-Ceramic-connector-CR-06/dp/B0713X6XG3/ref=sr_1_25?keywords=k-type&qid=1551683054&s=gateway&sr=8-25
+
+
+#wiring
+  RPLCD VCC:	5V
+  RPLCD GND:	GND
+  RPLCD SDA:	GPIO 2
+  RPLCD SCL:	GPIO 3
+
+  MAX31856 3vo:	3.3v
+  MAX31856 GND:	GND
+  MAX31856 SDO:	GPIO 9
+  MAX31856 SDI:	GPIO 10
+  MAX31856 CS:	GPIO 8
+  MAX31856 SCK:	GPIO 11
+
+#configure pi for lcd(ic2) and max31856(spi)
+sudo raspi-config
+  #enable interfaces ic2 & spi
+
+#install sqlite3, pip3 and other python3 stuffs
+sudo apt-get update
 sudo apt-get install sqlite3
 sudo apt-get install build-essential python3-pip python3-dev python3-smbus
+
+#libraries from github
 cd ~
 git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
   cd Adafruit_Python_GPIO
@@ -16,16 +41,20 @@ git clone git@github.com:johnrbnsn/Adafruit_Python_MAX31856.git
   cd Adafruit_Python_MAX31856
   sudo python3 setup.py install
 
+#install library for LCD using python installer 'pip3'
+sudo pip3 install RPLCD
+
+#create schema
 sqlite3 /home/pi/kilnlog.sqlite3
   CREATE TABLE firelog(RunID number, datime datetime, t number); 
 
-make this file executable:
+#make this file executable:
   chmod +x logger.py
 
 startup logging
 ./logger.py -i <intger Run_ID> -s <interval in seconds>
 
-access data
+#access data
 sqlite3 /home/pi/kilnlog.sqlite3
   select * from firelog where runid=32 order by datime asc;
 
