@@ -1,0 +1,35 @@
+select printf('$%.2f',round(sum(f.pid_output*s.int_sec)*12/360000*.11,2))
+  from firing f,
+       segments s
+  where f.run_id=2
+    and s.run_id=f.run_id
+    and s.segment=f.segment;
+
+select printf('$%.2f',round(sum(f.pid_output*s.int_sec)*kwh/100/60/60*.$/kwh,2)) 
+
+
+SELECT '1-2: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 200 and temp>100;
+SELECT '2-3: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 300 and temp>200;
+SELECT '3-4: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 400 and temp>300;
+SELECT '4-5: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 500 and temp>400;
+SELECT '5-6: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 600 and temp>500;
+SELECT '6-7: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 700 and temp>600;
+SELECT '7-8: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 800 and temp>700;
+SELECT '8-9: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp < 900 and temp>800;
+SELECT '9-?: '||avg(pid_output) FROM firing WHERE run_id=2 AND temp>900;
+
+1-2: 19.1963178294573
+2-3: 29.9687699530495
+3-4: 36.0738675213638
+4-5: 42.3544366197065
+5-6: 50.2592270531193
+6-7: 56.9528538812541
+7-8: 64.0362499999611
+8-9: 71.3750476190086
+
+  95:  5.144
+1168: 65.218
+1146: 57.694
+
+
+540 w/ 15 minute holds @  95,140,240,340,440,540 C
