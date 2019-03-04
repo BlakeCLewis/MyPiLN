@@ -76,7 +76,7 @@ Stuff to get it to work:
                 sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
                 sudo iptables save
                 cd 
-
+                chown www-data:www-data MyPiLN/html/pilnstat.json
 
 - Accessing the Web App:
 
