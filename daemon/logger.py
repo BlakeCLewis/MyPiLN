@@ -68,6 +68,14 @@ from Adafruit_GPIO import SPI
 from Adafruit_MAX31856 import MAX31856
 from display import display
 
+def ts(seconds):
+    H=divmod(seconds,3600)
+    M=divmod(H[1],60)
+    S=M[1]%60
+    return (str(int(H[0]))+':'+str(int(M[0]))+':'+str(int(S)))
+    #return ("%3.0f:%2.0f:%2.0f"%(H[0],M[0],S))
+
+
 def main(argv):
     try:
         opts, args = getopt.getopt(argv,"hi:s:",["runid=","seconds="])
@@ -101,7 +109,9 @@ def main(argv):
     t_now = sensor.read_temp_c()
     print('TC: {0:0.3F}*C'.format(t_now))
     temps=[t_now, t_now, t_now]
-    lastTime = time.time() - interval_seconds
+    starttime = time.time()
+    lastTime = starttime - interval_seconds
+    
     while True:
         datime = time.time()
         if lastTime + interval_seconds <= datime:
@@ -109,7 +119,7 @@ def main(argv):
             if temps.insert(0, t_now):
                 temps.pop()
             p = (RunID, time.strftime('%Y-%m-%d %H:%M:%S'), t_now)
-            lcd.writeLog(RunID, time.strftime('%H:%M:%S'), temps[0], temps[1], temps[2])
+            lcd.writeLog(RunID, ts(time.time()-starttime), temps[0], temps[1], temps[2])
             print('TC: {0:0.3F}*C'.format(t_now))
             try:
                 SQLCur.execute(sql, p)

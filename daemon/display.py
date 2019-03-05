@@ -66,7 +66,7 @@ class display(CharLCD):
         #self.write_string(line3[0:19])
 
     def writeLog(self,RunID,dastrtime,temp0,temp1,temp2):
-        line0='RunID: ' + str(RunID) + '   ' + dastrtime
+        line0='ID:' + str(RunID) + '  ' + dastrtime
         line1='Tnow ' + str(round(temp0,1)) + '\x01C     '
         line2='Tn-1 ' + str(round(temp1,1)) + '\x01C     '
         line3='Tn-2 ' + str(round(temp2,1)) + '\x01C     '
