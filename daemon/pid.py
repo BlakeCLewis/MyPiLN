@@ -101,9 +101,6 @@ class mypid:
     def setImax(self,eyemax):
         self.Imax=eyemax
 
-    def setOmax(self,ohmax):
-        self.Omax=ohmax
-
     def setWindow(self,bod):
         self.Window=bod
 
@@ -122,9 +119,6 @@ class mypid:
 
     def getImax(self):
         return self.Imax
-
-    def getOmax(self):
-        return self.Omax
 
     def getWindow(self):
         return self.Window
