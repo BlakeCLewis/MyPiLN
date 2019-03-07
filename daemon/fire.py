@@ -308,7 +308,6 @@ while 1:
             if SegCompStat == 1:
             else:
                 EndTime = time.strftime('%Y-%m-%d %H:%M:%S')
-
                 sql = "UPDATE profiles SET end_time=?, state=? WHERE run_id=?;"
                 p = (EndTime, 'Completed', RunID)
                 try:
