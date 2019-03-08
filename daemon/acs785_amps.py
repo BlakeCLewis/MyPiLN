@@ -23,4 +23,28 @@ while True:
     # Print the ADC values.
     print('| {0:>4} | {1:>4} | {2:>4} | {3:>4} | {4:>4} | {5:>4} | {6:>4} | {7:>4} |'.format(*values))
     # Pause for half a second.
-    time.sleep(0.5)
+    time.sleep(0.1)
+
+
+"""
+sct-013 1v range over 50amps
+
+off=515
+on= 428-609
+median 518
+609-518.5 = 90.5
+
+sct-013 is 1V at 50amps
+ADC 512 steps for 1.65V
+50amps=310steps
+
+50amps = 1V/1.65 =310S/512
+
+x/50=90/310
+
+90*50/310 = 14.5 amps
+
+take ~20 samples
+amps=(max-min)*50/310
+
+"""
