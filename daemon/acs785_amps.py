@@ -38,8 +38,9 @@ sct-013 is 1V at 50amps
 ADC 512 steps for 1.65V
 50amps=310steps
 
-50amps = 1V/1.65 =310S/512
+50a = 1V/1.65V = 310/512
 
+0amps = 512 digital
 x/50=90/310
 
 90*50/310 = 14.5 amps
