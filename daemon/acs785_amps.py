@@ -10,11 +10,11 @@ SPI_DEVICE = 1
 mcp = MCP3008(spi=SPI.SpiDev(SPI_PORT,SPI_DEVICE))
 
 print('Reading MCP3008 values, press Ctrl-C to quit...')
+"""
 # Print nice channel column headers.
 print('| {0:>4} | {1:>4} | {2:>4} | {3:>4} | {4:>4} | {5:>4} | {6:>4} | {7:>4} |'.format(*range(8)))
 print('-' * 57)
 # Main program loop.
-"""
 while True:
     # Read all the ADC channel values in a list.
     values = [0]*8
@@ -37,22 +37,21 @@ while True:
         #  - 7: Return channel 7 minus channel 6
 """
 while True:
-    #avalue = []
+    avalue = []
     bvalue = []
-    #cvalue = []
-    for x in range(30):
-        #avalue[x] = mcp.read_adc_difference(1)
-        bvalue[x] = mcp.read_adc_difference(3)
-        #cvalue[x] = mcp.read_adc_difference(5)
+    cvalue = []
+    for x in range(20):
+        avalue.append(mcp.read_adc_difference(1))
+        bvalue.append(mcp.read_adc_difference(3))
+        cvalue.append(mcp.read_adc_difference(5))
         time.sleep(0.01)
-    #aamp=((avalue.max()-avalue.min())*5/62
-    bamp=((bvalue.max()-bvalue.min())*5/62
-    #camp=((cvalue.max()-cvalue.min())*5/62
-    #print('L1: '+str(aamp)+' ='+str(avalue.max())+'-'+str(avalue.min())+'*5/62')
-    print('L2: '+str(bamp)+' ='+str(bvalue.max())+'-'+str(bvalue.min())+'*5/62')
-    #print('L3: '+str(camp)+' ='+str(cvalue.max())+'-'+str(cvalue.min())+'*5/62')
+    aamp=((max(avalue)-min(avalue))*5/62)
+    bamp=((max(bvalue)-min(bvalue))*5/62)
+    camp=((max(cvalue)-min(cvalue))*5/62)
+    print('L1: '+str(aamp)+' ='+str(max(avalue))+'-'+str(min(avalue))+'*5/62')
+    print('L2: '+str(bamp)+' ='+str(max(bvalue))+'-'+str(min(bvalue))+'*5/62')
+    print('L2: '+str(camp)+' ='+str(max(cvalue))+'-'+str(min(cvalue))+'*5/62')
     time.sleep(5)
-
 """
 sct-013 1v range over 50amps
 MCP3008a, 0-1024 digital w/ 512 being 0V, 0 is -1.65V, 1024 is +1.65V
