@@ -14,6 +14,7 @@ print('Reading MCP3008 values, press Ctrl-C to quit...')
 print('| {0:>4} | {1:>4} | {2:>4} | {3:>4} | {4:>4} | {5:>4} | {6:>4} | {7:>4} |'.format(*range(8)))
 print('-' * 57)
 # Main program loop.
+"""
 while True:
     # Read all the ADC channel values in a list.
     values = [0]*8
@@ -24,28 +25,52 @@ while True:
     print('| {0:>4} | {1:>4} | {2:>4} | {3:>4} | {4:>4} | {5:>4} | {6:>4} | {7:>4} |'.format(*values))
     # Pause for half a second.
     time.sleep(0.1)
-
+        # Grab the difference between channel 0 and 1 (i.e. channel 0 minus 1).
+        # Note you can specify any value in 0-7 to grab other differences:
+        #  - 0: Return channel 0 minus channel 1
+        #  - 1: Return channel 1 minus channel 0
+        #  - 2: Return channel 2 minus channel 3
+        #  - 3: Return channel 3 minus channel 2
+        #  - 4: Return channel 4 minus channel 5
+        #  - 5: Return channel 5 minus channel 4
+        #  - 6: Return channel 6 minus channel 7
+        #  - 7: Return channel 7 minus channel 6
+"""
+while True:
+    #avalue = []
+    bvalue = []
+    #cvalue = []
+    for x in range(30):
+        #avalue[x] = mcp.read_adc_difference(1)
+        bvalue[x] = mcp.read_adc_difference(3)
+        #cvalue[x] = mcp.read_adc_difference(5)
+        time.sleep(0.01)
+    #aamp=((avalue.max()-avalue.min())*5/62
+    bamp=((bvalue.max()-bvalue.min())*5/62
+    #camp=((cvalue.max()-cvalue.min())*5/62
+    #print('L1: '+str(aamp)+' ='+str(avalue.max())+'-'+str(avalue.min())+'*5/62')
+    print('L2: '+str(bamp)+' ='+str(bvalue.max())+'-'+str(bvalue.min())+'*5/62')
+    #print('L3: '+str(camp)+' ='+str(cvalue.max())+'-'+str(cvalue.min())+'*5/62')
+    time.sleep(5)
 
 """
 sct-013 1v range over 50amps
+MCP3008a, 0-1024 digital w/ 512 being 0V, 0 is -1.65V, 1024 is +1.65V
+
+ADC 512 steps for 1.65V
+1/1.65 = x/512
+512/1.65 = 310
+50amps=310steps
 
 off=515
 on= 428-609
 median 518
-609-518.5 = 90.5
+(609-428)/2 = 90
 
-sct-013 is 1V at 50amps
-ADC 512 steps for 1.65V
-50amps=310steps
+(609-428)*50/2/310 = 14.5 amps
+25/310=5/62
 
-50a = 1V/1.65V = 310/512
-
-0amps = 512 digital
-x/50=90/310
-
-90*50/310 = 14.5 amps
-
-take ~20 samples
-amps=(max-min)*50/310
+take ~30 samples
+amps=(max()-min())*5/62
 
 """
