@@ -90,22 +90,23 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     )
     global ITerm, LastErr
     Err = SetPoint - ProcValue
+
+    CTerm = 6*(ProcValue-6)/100
+    PTerm = Kp*Err
     ITerm += (Ki * Err)
     if ITerm > IMax:
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
-    DInput = Err-LastErr
-    Output = Kp*Err + ITerm - Kd*DInput
+    DTerm = Kd * (Err-LastErr)
+    Output = CTerm + PTerm + ITerm + DTerm
     if Output > 100:
         Output = 100
     elif Output < 0:
         Output = 0
     LastErr = Err
-    L.debug("""Exiting PID update with parameters Error:%0.2f,
-               ITerm:%0.2f, DInput:%0.2f, Output:%0.2f
-            """ % (Err, ITerm, DInput, Output)
-    )
+    print ("{CT:7.4f} + {PT:7.4f} + {IT:7.4f} + {DT:8.6f} = {OT:8.4f}".format(CT=CTerm,PT=PTerm,IT=ITerm,DT=DTerm,OT=Output))
+
     return Output
 
 def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
@@ -231,7 +232,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                               Steps, StepTmp, Window, StartSec, EndSec)
                 )
             # run state through pid
-            Output = Update(RampTmp, ReadTmp, 100, 0, Window, Kp, Ki, Kd)
+            Output = Update(RampTmp, ReadTmp, 20, -20, Window, Kp, Ki, Kd)
             
             CycleOnSec = Window * Output * 0.01
             if CycleOnSec > Window:
@@ -241,7 +242,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             RemMin, RemSec = divmod(RemainSec, 60)
             RemHr, RemMin = divmod(RemMin, 60)
             RemTime = "%d:%02d:%02d" % (RemHr, RemMin, RemSec)
-            L.debug("""RunID %d, Segment %d (loop %d) - RunState:%s,
+            print("""RunID %d, Segment %d (loop %d) - RunState:%s,
                        ReadTmp:%0.2f, RampTmp:%0.2f, TargetTmp:%0.2f,
                        Output:%0.2f, CycleOnSec:%0.2f, RemainTime:%s
                     """ % (RunID, Seg, Cnt, RunState, ReadTmp, RampTmp,
