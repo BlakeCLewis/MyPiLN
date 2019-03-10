@@ -105,6 +105,8 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     elif Output < 0:
         Output = 0
     LastErr = Err
+    # Kc=6, Kp=5, Ki=1, Kd=25
+    # output(lim 0..100) = Kc*(PV-6)/100 + Kp*Err(lim -20..+20) + summation(Ki*Err) + Kd*(Err-LastErr)
     print ("{CT:7.4f} + {PT:7.4f} + {IT:7.4f} + {DT:8.6f} = {OT:8.4f}".format(CT=CTerm,PT=PTerm,IT=ITerm,DT=DTerm,OT=Output))
 
     return Output
@@ -232,7 +234,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                               Steps, StepTmp, Window, StartSec, EndSec)
                 )
             # run state through pid
-            Output = Update(RampTmp, ReadTmp, 20, -20, Window, Kp, Ki, Kd)
+            Output = Update(RampTmp, ReadTmp, 30, -30, Window, Kp, Ki, Kd)
             
             CycleOnSec = Window * Output * 0.01
             if CycleOnSec > Window:
