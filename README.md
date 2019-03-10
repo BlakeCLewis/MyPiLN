@@ -199,7 +199,7 @@ Stuff to get it to work:
 
 - Glaze firing on Feburary 23, 2019:
 
-![:::](./glaze_firing_graph.png)
+![:::](./PiLN_Firing-03-009-2019.png)
 
 Test firing, I roasted some raw materials:
 
