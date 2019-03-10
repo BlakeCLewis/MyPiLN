@@ -197,7 +197,7 @@ Stuff to get it to work:
 
 		python3 ./daemon/pilnfired.py
 
-- Glaze firing on Feburary 23, 2019:
+- Glaze firing on March 3, 2019:
 
 ![:::](./PiLN_Firing-03-009-2019.png)
 
