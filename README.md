@@ -182,6 +182,7 @@ Stuff to get it to work:
 - Tuning: 
 
 	+ Skutt KS1027 with old elements, minimal oscillation w/ very little overshoot:
+
             Kc               6.0
 			Proportional:    5.0
 			Integral:        1.0
