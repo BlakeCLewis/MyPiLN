@@ -226,20 +226,40 @@ Test firing, I roasted some raw materials:
 
       This is a work in progress and I have not finish testing these instructions;
       My implementation of a PID algorithm that is optimaized for a system that can only add heat;
+
+      Short comings:
+
+          As presented a change in window size will affect the P,I,D constants;
+          I am working on a version scale the terms with window size to reduce the affect of changing window size;
+          C is not determined by a time sensitive value;
+          P,I & D are determined by an amount of error over a time segment, so those terms should be normilazed by the time segment like (term*60/window)
+      
       error = Setpoint - Currrent_temp;
       Pterm = Kp * error;
       Iterm = Summation (Ki * error), constrained by (Imin <= Iterm <= Imax);
       Dterm = Kd (error - previous_error);
-      Cterm = Kc * (Current_temp - room_temp)/100.
+      Cterm = Kc * (Current_temp - room_temp)/100;
+      Window = 30
+
+      Window:
+          size of the base time unit, the controller will decide what to every window;
+          is determined by kiln response time (how long it takes to finish reacting to input);
+          window = 30;
+          bump test
+
+              turning on kiln for 30 seconds
+              record temp/time every 10 seconds
+              tau_temp = .75(hi_temp - start-temp)
+              window = 1/4 (time at tau+temp)
 
       Cterm:
 
           Kc = 6;
           Steady state term, required amount of energy to maintain temp, linear, inverse proportional to r-value of kiln;
-          This is my solution to the oscillating I could not tune out of PID, it probably is not an original thought;
-          My kiln requires about 6% of output per 100C of temp differential(100C ~= 6% to hold temp, 1000C ~= 60% to hold temp).
+          this is my solution to the oscillating I could not tune out of PID, it probably is not an original thought;
+          my kiln requires about 6% of output per 100C of temp differential(100C ~= 6% to hold temp, 1000C ~= 60% to hold temp).
           tune:
-              After determining "window", do a test run to 500C, with 10 minute holds every 100C;
+              after determining "window", do a test run to 500C, with 10 minute holds every 100C;
               query the database to find the average output during the holds;
               mine was about 6% per 100C.
 
@@ -268,15 +288,4 @@ Test firing, I roasted some raw materials:
 
           output = (Cterm + Pterm + Iterm + Dterm);
           output is a percentage and therefore constrained by (0 <= output <= 100)
-
-      Window:
-
-          determined by kiln response time (how long it takes to finish reacting to input)
-          window = 30
-          bump test
-
-              turning on kiln for 30 seconds;
-              record temp every 10 seconds
-              tau_temp = .75(hi_temp - start-temp)
-              window ~= 1/4 (time at tau+temp)
           
