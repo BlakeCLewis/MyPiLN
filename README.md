@@ -181,12 +181,12 @@ Stuff to get it to work:
 
 - Tuning: 
 
-	+ Skutt KS1027 with old elements, oscilate at lower temps, does well over 600C:
-			Proportional:  20.0
-			Integral:       0.2
-			Derivative:     0.2
-			Time internal: 30 seconds
-            The response cycle is about 4 minutes.
+	+ Skutt KS1027 with old elements, minimal oscillation w/ very little overshoot:
+            Kc               6.0
+			Proportional:    5.0
+			Integral:        1.0
+			Derivative:     25.0
+			Time internal:  30 seconds
 
 - Using the Web App:
 
