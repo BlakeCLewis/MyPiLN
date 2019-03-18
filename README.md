@@ -229,17 +229,18 @@ Test firing, I roasted some raw materials:
 
       Short comings:
 
-          As presented a change in window size will affect the P,I,D constants;
-          I am working on a version scale the terms with window size to reduce the affect of changing window size;
+          As presented, a change in window size will affect the P,I,D constants;
+          I am working on a version scales with window size to reduce the affect of changing window size;
           C is not determined by a time sensitive value;
-          P,I & D are determined by an amount of error over a time segment, so those terms should be normilazed by the time segment like (term*60/window)
+          P,I & D are determined by an amount of error over a time segment
+              these terms should be normilazed by the time segment like (term*60/window)
       
       error = Setpoint - Currrent_temp;
       Pterm = Kp * error;
       Iterm = Summation (Ki * error), constrained by (Imin <= Iterm <= Imax);
       Dterm = Kd (error - previous_error);
       Cterm = Kc * (Current_temp - room_temp)/100;
-      Window = 30
+      Window = determinied by bump test.
 
       Window:
           size of the base time unit, the controller will decide what to every window;
@@ -255,9 +256,12 @@ Test firing, I roasted some raw materials:
       Cterm:
 
           Kc = 6;
-          Steady state term, required amount of energy to maintain temp, linear, inverse proportional to r-value of kiln;
-          this is my solution to the oscillating I could not tune out of PID, it probably is not an original thought;
-          my kiln requires about 6% of output per 100C of temp differential(100C ~= 6% to hold temp, 1000C ~= 60% to hold temp).
+          Steady state term, required amount of energy to maintain temp;
+          it is linear, inverse proportional to r-value of kiln;
+          this is my solution to the oscillating I could not tune out of PID;
+          it probably is not an original thought;
+          my kiln requires about 6% of output per 100C of temp differential;
+          (100C ~= 6% to hold temp, 1000C ~= 60% to hold temp);
           tune:
               after determining "window", do a test run to 500C, with 10 minute holds every 100C;
               query the database to find the average output during the holds;
