@@ -43,7 +43,7 @@ LastTmp = 0.0
 #--- MAX31856 only works on SPI0, SPI1 cannot do mode=1 ---
 #Sensor0 = MAX31856.MAX31856(spi = SPI.SpiDev(0, 0)) #SPI0,CE0
 #--- MAX31855 ---
-Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
+Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE0
 #Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
 
 
@@ -91,7 +91,7 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     global ITerm, LastErr
     Err = SetPoint - ProcValue
 
-    CTerm = 6*(ProcValue-6)/100
+    CTerm = 6*(ProcValue-13)/100
     PTerm = Kp*Err
     ITerm += (Ki * Err)
     if ITerm > IMax:
@@ -139,7 +139,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             Cnt += 1                         # record keeping only
             NextSec = time.time() + Window   # time at end of window
             LastTmp = ReadTmp
-            ReadTmp = Sensor0.readTempC()
+            ReadTmp = Sensor0.readLinearizedTempC()
             ReadITmp = Sensor0.readInternalC()
             if math.isnan(ReadTmp)  or  ReadTmp == 0  or  ReadTmp > 1330:
                 # error reading
@@ -325,8 +325,9 @@ while 1:
     ReadITmp1 = Sensor0.readInternalC()
     #ReadTmp2 = Sensor2.read_temp_c)
     #ReadITmp2 = Sensor2.read_internal_temp_c()
-    if math.isnan(ReadTmp):
-        ReadTmp = LastTmp
+    while math.isnan(ReadTmp):
+        ReadTmp = Sensor0.readTempC()
+        ReadTmp1 = ReadTmp
 
     L.debug("Write status information to status file %s:" % StatFile)
 
