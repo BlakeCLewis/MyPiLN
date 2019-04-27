@@ -181,12 +181,13 @@ Stuff to get it to work:
 
 - Tuning: 
 
-	+ Skutt KS1027 with old elements, oscilate at lower temps, does well over 600C:
-			Proportional:  20.0
-			Integral:       0.2
-			Derivative:     0.2
-			Time internal: 30 seconds
-            The response cycle is about 4 minutes.
+	+ Skutt KS1027 with old elements, minimal oscillation w/ very little overshoot:
+
+            Kc               6.0
+			Proportional:    5.0
+			Integral:        1.0
+			Derivative:     25.0
+			Time internal:  30 seconds
 
 - Using the Web App:
 
@@ -221,3 +222,75 @@ Test firing, I roasted some raw materials:
 - This is the state of the kiln during the above 1000C test:
 3 porcelain teminal blocks, with appliance high temp wire, each block feeds 1 section/2 elements.
 ![:::](./kiln_element_wiring.png)
+
+- PID with C algorithm:
+
+      This is a work in progress and I have not finish testing these instructions;
+      My implementation of a PID algorithm that is optimaized for a system that can only add heat;
+
+      Short comings:
+
+          As presented, a change in window size will affect the P,I,D constants;
+          I am working on a version scales with window size to reduce the affect of changing window size;
+          C is not determined by a time sensitive value;
+          P,I & D are determined by an amount of error over a time segment
+              these terms should be normilazed by the time segment like (term*60/window)
+      
+      error = Setpoint - Currrent_temp;
+      Pterm = Kp * error;
+      Iterm = Summation (Ki * error), constrained by (Imin <= Iterm <= Imax);
+      Dterm = Kd (error - previous_error);
+      Cterm = Kc * (Current_temp - room_temp)/100;
+      Window = determinied by bump test.
+
+      Window:
+          size of the base time unit, the controller will decide what to every window;
+          is determined by kiln response time (how long it takes to finish reacting to input);
+          window = 30;
+          bump test
+
+              turning on kiln for 30 seconds
+              record temp/time every 10 seconds
+              tau_temp = .75(hi_temp - start-temp)
+              window = 1/4 (time at tau+temp)
+
+      Cterm:
+
+          Kc = 6;
+          Steady state term, required amount of energy to maintain temp;
+          it is linear, inverse proportional to r-value of kiln;
+          this is my solution to the oscillating I could not tune out of PID;
+          it probably is not an original thought;
+          my kiln requires about 6% of output per 100C of temp differential;
+          (100C ~= 6% to hold temp, 1000C ~= 60% to hold temp);
+          tune:
+              after determining "window", do a test run to 500C, with 10 minute holds every 100C;
+              query the database to find the average output during the holds;
+              mine was about 6% per 100C.
+
+      Pterm:
+
+          Kp = 5;
+          An amount proportional to desired change in temp;
+          this was an intuitive gues that worked
+
+      Iterm:
+
+          Ki = 1;
+          Imin = -25;
+          Imax = 25;
+          Accumlitive error, corrects for past errors in (Cterm + Pterm);
+          I look at it as incremental change in output to correct for error of (Cterm + Pterm);
+          To reduce iIterm "Windup", Iterm is limited by (Imin <= Iterm <+ Imax).
+
+      Dterm:
+
+          Kd = 25;
+          rate of change in error, d;
+          Dterm needs to beable to cancel Item, another intuitive guess.
+
+      Output:
+
+          output = (Cterm + Pterm + Iterm + Dterm);
+          output is a percentage and therefore constrained by (0 <= output <= 100)
+          
