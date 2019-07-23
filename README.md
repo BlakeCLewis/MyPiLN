@@ -1,3 +1,6 @@
+The contained branch is the current usable branch.
+
+
 Electricity and heat are dangerous! Evaluate the risk and make go no go decision!
 
 Web-based Raspberry Pi Kiln Control:
