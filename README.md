@@ -1,4 +1,8 @@
-The contained branch is the current usable branch.
+The 'contained' branch is the current usable branch. It is using new thermocouple chip (MAX31856) and the code has been improved. This readme has the most info in it, pictures and links to parts....
+
+
+
+
 
 
 Electricity and heat are dangerous! Evaluate the risk and make go no go decision!
