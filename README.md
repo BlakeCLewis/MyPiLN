@@ -1,3 +1,6 @@
+This code branch is the current usable branch. It has been stripped down to the minimial stuff. No pictures in the readme, code is the most usable.
+
+
 Electricity and heat are dangerous! Evaluate the risk and make your go/no-go decision!
 
 Stuff to get it to work:
@@ -91,11 +94,11 @@ Stuff to get it to work:
 
 - Tuning: 
 
-	+ Skutt KS1027 with old elements, oscilate at lower temps, does well over 600C:
+	+ Skutt KS1027 with old elements:
 
-			Proportional:  20.0
-			Integral:       0.2
-			Derivative:     0.2
+			Proportional:   3.0
+			Integral:       0.4
+			Derivative:    13.0
 			Time internal: 30 seconds
 			The response cycle is about 4 minutes.
 
