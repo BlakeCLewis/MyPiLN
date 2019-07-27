@@ -43,7 +43,7 @@ LastTmp = 0.0
 #--- MAX31856 only works on SPI0, SPI1 cannot do mode=1 ---
 #Sensor0 = MAX31856.MAX31856(spi = SPI.SpiDev(0, 0)) #SPI0,CE0
 #--- MAX31855 ---
-Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 0)) #SPI1,CE0
+Sensor0 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE0
 #Sensor1 = MAX31855.MAX31855(spi = SPI.SpiDev(1, 1)) #SPI1,CE1
 
 
@@ -90,22 +90,30 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     )
     global ITerm, LastErr
     Err = SetPoint - ProcValue
+
+    CTerm = 6*(ProcValue-13)/100
+    PTerm = Kp*Err
     ITerm += (Ki * Err)
     if ITerm > IMax:
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
+<<<<<<< HEAD
     DInput = Err-LastErr
     Output = 6*(ProcValue-6) + Kp*Err + ITerm - Kd*DInput
+=======
+    DTerm = Kd * (Err-LastErr)
+    Output = CTerm + PTerm + ITerm + DTerm
+>>>>>>> 249bbacc1d90e821cff1988b7528c1cfc75b700e
     if Output > 100:
         Output = 100
     elif Output < 0:
         Output = 0
     LastErr = Err
-    L.debug("""Exiting PID update with parameters Error:%0.2f,
-               ITerm:%0.2f, DInput:%0.2f, Output:%0.2f
-            """ % (Err, ITerm, DInput, Output)
-    )
+    # Kc=6, Kp=5, Ki=1, Kd=25
+    # output(lim 0..100) = Kc*(PV-6)/100 + Kp*Err(lim -20..+20) + summation(Ki*Err) + Kd*(Err-LastErr)
+    print ("{CT:7.4f} + {PT:7.4f} + {IT:7.4f} + {DT:8.6f} = {OT:8.4f}".format(CT=CTerm,PT=PTerm,IT=ITerm,DT=DTerm,OT=Output))
+
     return Output
 
 def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
@@ -136,7 +144,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             Cnt += 1                         # record keeping only
             NextSec = time.time() + Window   # time at end of window
             LastTmp = ReadTmp
-            ReadTmp = Sensor0.readTempC()
+            ReadTmp = Sensor0.readLinearizedTempC()
             ReadITmp = Sensor0.readInternalC()
             if math.isnan(ReadTmp)  or  ReadTmp == 0  or  ReadTmp > 1330:
                 # error reading
@@ -231,7 +239,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                               Steps, StepTmp, Window, StartSec, EndSec)
                 )
             # run state through pid
-            Output = Update(RampTmp, ReadTmp, 40, -40, Window, Kp, Ki, Kd)
+            Output = Update(RampTmp, ReadTmp, 30, -30, Window, Kp, Ki, Kd)
             
             CycleOnSec = Window * Output * 0.01
             if CycleOnSec > Window:
@@ -241,7 +249,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
             RemMin, RemSec = divmod(RemainSec, 60)
             RemHr, RemMin = divmod(RemMin, 60)
             RemTime = "%d:%02d:%02d" % (RemHr, RemMin, RemSec)
-            L.debug("""RunID %d, Segment %d (loop %d) - RunState:%s,
+            print("""RunID %d, Segment %d (loop %d) - RunState:%s,
                        ReadTmp:%0.2f, RampTmp:%0.2f, TargetTmp:%0.2f,
                        Output:%0.2f, CycleOnSec:%0.2f, RemainTime:%s
                     """ % (RunID, Seg, Cnt, RunState, ReadTmp, RampTmp,
@@ -322,8 +330,9 @@ while 1:
     ReadITmp1 = Sensor0.readInternalC()
     #ReadTmp2 = Sensor2.read_temp_c)
     #ReadITmp2 = Sensor2.read_internal_temp_c()
-    if math.isnan(ReadTmp):
-        ReadTmp = LastTmp
+    while math.isnan(ReadTmp):
+        ReadTmp = Sensor0.readTempC()
+        ReadTmp1 = ReadTmp
 
     L.debug("Write status information to status file %s:" % StatFile)
 

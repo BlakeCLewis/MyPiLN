@@ -42,7 +42,7 @@
             0: {targetAxisIndex: 1},
             1: {targetAxisIndex: 0},
             2: {targetAxisIndex: 0},
-            3: {targetAxisIndex: 0}
+            3: {targetAxisIndex: 0, type: 'bars'}
           },
           vAxes: {
             0: {
@@ -82,7 +82,7 @@
  
         // Instantiate and draw our chart, passing in some options.
 //        var chart = new google.charts.Line(chartDiv);
-        var chart = new google.visualization.LineChart(chartDiv);
+        var chart = new google.visualization.ComboChart(chartDiv);
  
         function updateChart() {
           var query = {
