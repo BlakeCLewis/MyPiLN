@@ -7,6 +7,7 @@ Web-based Raspberry Pi Kiln Control:
 	+ on a Pi Zero W 'startx chromium-browser --start-maximized' (chrome in X with no window manager)
     + or hit it with browser from other machine on your network
     + I run full desktop on Pi 3b
+    + MAX31856 has 50/60hz filter and a correction table and can do multiple types including S, minimal change
 
 - kiln sitter(KS) as a sensor
 	+ KS functions as 'ARMED', can not start firing without kilnsitter being armed
@@ -15,37 +16,32 @@ Web-based Raspberry Pi Kiln Control:
 
 Future improvements:
 - record ambient temp with firing data:
-- thermocouple class:
-	+ MAX31855 current harware,
-	+ MAX31856 has 50/60hz filter and a correction table and can do multiple types including S, minimal change
 - performance watchdog:
 	+ warning notifications, klexting;
 	+ shutdown when a minimum rate cannot be maintained,
 - inductive current sensors: element fault indication;
-- zone control: thermocouple/section and control sections independently;
 - crash/loss of power recovery:
 	+ PI comes up, KS is armed & profile is 'Running' then how to consider unfinished segment
 	+ compare temp at the timestamp to current temp
 	+ compare last timestamp of 'Running' firing to current time
-	+ notify on power resume, klexting (kiln text message)
+	+ klexting (kiln text message), notify phone on events
+
 
 Hardware:
 - 20x4 LCD w/ i2c backpack
 	+ $13, (https://www.amazon.com/gp/product/B01GPUMP9C/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1) uses RPLCD library
-- MAX31856 thermocouple module
-	+ $17.50, Adafruit (https://www.adafruit.com/product/3263);
-    + not yet using, but want to switch soon, it is a much better chip than the MAX31855
-- MAX31855 thermocouple module
-	+ $14.95, Adafruit (https://www.adafruit.com/product/269);
+- 2 - MAX31856 thermocouple module
+	+ $17.50 each, Adafruit (https://www.adafruit.com/product/3263) or amazon;
 - High temperature (2372 F) type K thermocouple
 	+ $7/each, 3 pack, (https://www.aliexpress.com/item/High-Temperature-K-Type-Thermocouple-Sensor-for-Ceramic-Kiln-Furnace-1300-Temperature/32832729663.html?spm=a2g0s.9042311.0.0.3dd14c4dIQr1ud);
 - Thermocouple wire:
     + I bought the 24awg yellow k-type stuff at the pottery store, amazon has it too;
-    + I use about 8 feet, the controller is attached to the wall.
+    + I use about 6 feet, the controller is attached to the wall. I also chuck it into a drill and twisted it to help with rf noise
 - 1 - uln2803a darlington transitor array to switch 12V coil on the relays
 	+ $1/each on amazon, using 3 of 8 channels;
 - 3 - Deltrol 20852-81 relays
-	+ This is equivelent to relay Skutt uses to switch sections/zones (Skutt model is SPDT, this is same series but DPDT),
+	+ This is equivelent to relay Skutt uses to switch sections/zones,
+	Skutt uses same brand/series but is NO (normaly open) only, this one has both NO and NC(normaly close);
 	+ $17.50 each and about that much for shipping (https://www.galco.com/buy/Deltrol-Controls/20852-81);
 - 12V power supply
 	+ converts 120vac to 12vdc;
@@ -53,12 +49,12 @@ Hardware:
 	+ $20 (https://www.amazon.com/gp/product/B00DECZ7WC/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1);
 	+ rail mounted.
 - 5V buck converter
-	+ converts 12v to 5v USB connector for Pi power;
-	+ $7 (https://www.amazon.com/gp/product/B071FJVRCT/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1);
+	+ converts 12v to 5v;
+	+ $7 (https://www.amazon.com/Solu-Adjustable-Step-down-Converter-Voltmeter/dp/B00VWL41TM/ref=pd_rhf_ee_s_rp_c_0_26?_encoding=UTF8&pd_rd_i=B00VWL41TM&pd_rd_r=908de794-8e98-424c-81e4-505c48b4935a&pd_rd_w=aUhyz&pd_rd_wg=yCCIi&pf_rd_p=4b985ee3-c51c-45b0-b742-d73501cbd701&pf_rd_r=928BPHRVEKMD9JFZ1Y5R&psc=1&refRID=928BPHRVEKMD9JFZ1Y5R);
 - monitor w/HDMI input, mine is 1366x780;
 - terminal blocks to distribute L1, L2, N and GND
 	+ Ground, $6 (https://www.amazon.com/gp/product/B000K2MA9M/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
-	+ L1,L2,Neutral, 3 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
+	+ L1 & L2, 2 @ $7/each, (https://www.amazon.com/gp/product/B000OTJ89Q/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1);
 - #12 awg hi-temp appliance wire to each element;
 - 3 ceramic 2 pole terminal blocks.
 - crimp terminals, #10 awg, hi-temp appliance
@@ -84,35 +80,39 @@ Thermocouple tip: One side of the type-K thermocouple and type-k wire is magneti
 
 
 - Current kiln controller is attached to is a Old Skutt 281, which is a previous model number of KS1027:
-  + old elements, I am surprised that it easily reaches temp at high speed, this kiln sat unused, outside under roof for 15 years, I don't want to put my new elements in it;
-  + lid(split and flaking)repaired/coated;
-  + base(cracks) repaired;
-  + rust removal on controller boxes, painted;
-  + built 2 steel rolling stands;
+
+	+ old elements, I am surprised that it easily reaches temp at high speed, this kiln sat unused, outside under roof for 15 years, I don't want to put my new elements in it;
+	+ lid(split and flaking)repaired/coated;
+	+ rust removal on controller boxes, painted;
+	+ built steel rolling stand;
 
 
 Stuff to get it to work:
 
 - Pin-Out:
 
-		RPLCD:		GPIO 2 SDA
-		RPLCD:		GPIO 3 SCL
-		RPLCD:		5V
-		RPLCD:		GND
-		MAX31855+:		3.3v
-		MAX31855-:		GND
-		MAX31855 CS:		GPIO 16
-		MAX31855 DO:		GPIO 19
-		MAX31855 CLK:		GPIO 21
-		unl2003a 1:		GPIO 22 
-		unl2003a 3:		GPIO 23
-		unl2003a 5:		GPIO 24
-		unl2003a 8:		GND
-		unl2003a 9:		12V
-		unl2003a 16:	relay #1 coil - (input is accross the chip on pin1)
-		unl2003a 14:	relay #2 coil - (input is pin3)
-		unl2003a 12:	relay #3 coil - (input is pin5)
-        12V:	relay 1,2 and 3 coils
+		5V supply:      5V      PIN2
+		RPLCD VCC:      5V      PIN4
+		RPLCD GND:      GND     PIN6
+		RPLCD SDA:      GPIO 2
+		RPLCD SCL:      GPIO 3
+		MAX31856 3.3V:  3.3V    PIN17
+		MAX31856 GND:   GND     PIN14
+		MAX31856 SDO:   GPIO 9
+		MAX31856 SDI:   GPIO 10
+		MAX31856 CS:    GPIO 8 & GPIO 7
+		MAX31856 SCK:   GPIO 11
+		unl2003a 1:     GPIO 22
+		unl2003a 3:     GPIO 23
+		unl2003a 5:     GPIO 24
+		unl2003a 8:     GND
+		unl2003a 9:     12V power supply
+		unl2003a 16:    relay #1 coil
+		unl2003a 14:    relay #2 coil
+		unl2003a 12:    relay #3 coil
+		12V power sup:  relays #1,#2,#3 coil
+		kilnsitter:     3.3v and GPIO 27
+
 
 - Install PiLN files in /home and create log directory:
 
@@ -165,11 +165,11 @@ Stuff to get it to work:
 		sudo pip install RPLCD
 		sudo apt install python-smbus
 
-- Install Adafruit MAX31855 Module:
+- Install Adafruit MAX31856 Module:
 
 		cd ~
-		git clone https://github.com/adafruit/Adafruit_Python_MAX31855.git
-		cd Adafruit_Python_MAX31855
+		git clone https://github.com/adafruit/Adafruit_Python_MAX31856.git
+		cd Adafruit_Python_MAX31856
 		sudo python setup.py install
 
 - create the sqlite3 database:
@@ -181,10 +181,10 @@ Stuff to get it to work:
 
 - Tuning: 
 
-	+ Skutt KS1027 with old elements, oscilate at lower temps, does well over 600C:
-			Proportional:  20.0
-			Integral:       0.2
-			Derivative:     0.2
+	+ Skutt KS1027 with old elements:
+			Proportional:   3.0
+			Integral:       0.4
+			Derivative:    13.0
 			Time internal: 30 seconds
             The response cycle is about 4 minutes.
 

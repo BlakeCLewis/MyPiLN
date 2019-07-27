@@ -96,7 +96,7 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
     elif ITerm < IMin:
         ITerm = IMin
     DInput = Err-LastErr
-    Output = Kp*Err + ITerm - Kd*DInput
+    Output = 6*(ProcValue-6) + Kp*Err + ITerm - Kd*DInput
     if Output > 100:
         Output = 100
     elif Output < 0:
@@ -231,7 +231,7 @@ def Fire(RunID, Seg, TargetTmp1, Rate, HoldMin, Window, Kp, Ki, Kd, KSTrg):
                               Steps, StepTmp, Window, StartSec, EndSec)
                 )
             # run state through pid
-            Output = Update(RampTmp, ReadTmp, 100, 0, Window, Kp, Ki, Kd)
+            Output = Update(RampTmp, ReadTmp, 40, -40, Window, Kp, Ki, Kd)
             
             CycleOnSec = Window * Output * 0.01
             if CycleOnSec > Window:

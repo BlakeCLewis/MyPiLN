@@ -1,0 +1,20 @@
+pegging upper ITerm limit (20) over 500C
+    # Kc=6, Kp=5, Ki=1, Kd=25
+    # output(lim 0..100)
+         = Kc * (PV-6) / 100
+         + Kp * Err (lim -20..+20)
+         + summation( Ki * Err )
+         + Kd * (Err-LastErr)
+
+    window = 30
+   
+   Kp = 3
+   6 = Kp * 30 / 60
+
+   Ki = .5
+   1 = Ki * 30 / 60
+
+   Kd = 12.5
+   25 = Kd * 30 / 60
+
+
