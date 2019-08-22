@@ -1,4 +1,4 @@
-The 'contained' branch is the current usable branch. It is using new thermocouple chip (MAX31856) and the code has been improved. This readme has the most info in it, pictures and links to parts....
+I forked the 'contained' branch into 'BlakeCLewis/PiLN'. It is using new thermocouple chip (MAX31856) and the code has been improved. In the old code, changing the interval length throws off the p & d terms. The new code has the p & d terms as rates, so changing the interval length should not require p & d constant changes.
 
 
 
