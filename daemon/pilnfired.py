@@ -98,13 +98,8 @@ def Update(SetPoint, ProcValue, IMax, IMin, Window, Kp, Ki, Kd):
         ITerm = IMax
     elif ITerm < IMin:
         ITerm = IMin
-<<<<<<< HEAD
-    DInput = Err-LastErr
-    Output = 6*(ProcValue-6) + Kp*Err + ITerm - Kd*DInput
-=======
     DTerm = Kd * (Err-LastErr)
     Output = CTerm + PTerm + ITerm + DTerm
->>>>>>> 249bbacc1d90e821cff1988b7528c1cfc75b700e
     if Output > 100:
         Output = 100
     elif Output < 0:
